@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minimal Journal</title>
+
+<style>
+  :root {
+    --bg-main: #f7f7f7;
+    --bg-note: #ffffff;
+    --text-main: #222;
+    --text-muted: #9aa0a6;
+    --border-soft: #e5e5e5;
+    --important-border: #b0b6bb; /* subtle, calm */
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    background: #fff;
+  }
+
+  header .actions button {
+    margin-left: 8px;
+  }
+
+  main {
+    padding: 16px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  .toolbar button {
+    font-size: 13px;
+  }
+
+  .notes {
+    margin-top: 16px;
+  }
+
+  .note {
+    background: var(--bg-note);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-left 0.2s ease;
+  }
+
+  /* IMPORTANT: subtle left border only */
+  .note.important {
+    border-left: 4px solid var(--important-border);
+  }
+
+  .note-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .note-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex: 1;
+  }
+
+  .timestamp {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  button:hover {
+    opacity: 0.7;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>Minimal Journal</div>
+  <div class="actions">
+    <button id="filterImportant">Important</button>
+    <button id="exportNotes">Export</button>
+    <button id="importNotes">Import</button>
+  </div>
+</header>
+
+<main>
+  <textarea id="noteInput" placeholder="Write your note…"></textarea>
+
+  <div class="toolbar">
+    <button id="boldToggle">B</button>
+    <button id="capsToggle">CAPS</button>
+    <button id="importantToggle">!</button>
+    <button id="addNote">Add</button>
+  </div>
+
+  <div class="notes" id="notesList"></div>
+</main>
+
+<script>
+  const noteInput = document.getElementById("noteInput");
+  const notesList = document.getElementById("notesList");
+
+  let isBold = false;
+  let isCaps = false;
+  let isImportant = false;
+  let showImportantOnly = false;
+
+  let notes = JSON.parse(localStorage.getItem("notes") || "[]");
+
+  function saveNotes() {
+    localStorage.setItem("notes", JSON.stringify(notes));
+  }
+
+  function renderNotes() {
+    notesList.innerHTML = "";
+
+    notes
+      .filter(n => !showImportantOnly || n.important)
+      .forEach((note, index) => {
+        const div = document.createElement("div");
+        div.className = "note" + (note.important ? " important" : "");
+
+        // ---- Long press detection (mobile-friendly) ----
+        let pressTimer;
+        div.addEventListener("touchstart", () => {
+          pressTimer = setTimeout(() => {
+            notes[index].important = !notes[index].important;
+            saveNotes();
+            renderNotes();
+          }, 500);
+        });
+
+        div.addEventListener("touchend", () => {
+          clearTimeout(pressTimer);
+        });
+        // ------------------------------------------------
+
+        const content = document.createElement("div");
+        content.className = "note-content";
+
+        const text = document.createElement("div");
+        text.className = "note-text";
+        text.innerHTML = note.text;
+
+        const time = document.createElement("div");
+        time.className = "timestamp";
+        time.textContent = note.time;
+
+        content.appendChild(text);
+        content.appendChild(time);
+        div.appendChild(content);
+
+        notesList.appendChild(div);
+      });
+  }
+
+  document.getElementById("addNote").onclick = () => {
+    if (!noteInput.value.trim()) return;
+
+    let text = noteInput.value;
+    if (isCaps) text = text.toUpperCase();
+    if (isBold) text = `<strong>${text}</strong>`;
+
+    notes.unshift({
+      text,
+      important: isImportant,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    });
+
+    noteInput.value = "";
+    saveNotes();
+    renderNotes();
+  };
+
+  document.getElementById("boldToggle").onclick = () => isBold = !isBold;
+  document.getElementById("capsToggle").onclick = () => isCaps = !isCaps;
+  document.getElementById("importantToggle").onclick = () => isImportant = !isImportant;
+
+  document.getElementById("filterImportant").onclick = () => {
+    showImportantOnly = !showImportantOnly;
+    renderNotes();
+  };
+
+  renderNotes();
+</script>
+
+</body>
+</html>
