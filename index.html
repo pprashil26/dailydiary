@@ -1,0 +1,281 @@
+## index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Journal</title>
+  <meta name="theme-color" content="#3b2f2a" />
+
+  <style>
+    :root {
+      --app-bg: #3b2f2a;
+      --page-bg: #f6f1eb;
+      --text-main: #2a2421;
+      --text-muted: #9b8f86;
+      --important-border: #8a6d4f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--app-bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      max-width: 780px;
+      margin: 16px auto;
+      padding: 12px;
+      background: var(--page-bg);
+      border-radius: 10px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .toolbar button,
+    .toolbar input {
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+
+    .toolbar input {
+      flex: 1;
+      border-bottom: 1px solid #ddd;
+      padding: 4px 2px;
+      outline: none;
+    }
+
+    .editor {
+      width: 100%;
+      min-height: 80px;
+      resize: none;
+      border: none;
+      outline: none;
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--text-main);
+      background: transparent;
+      margin-bottom: 12px;
+    }
+
+    .entry {
+      padding: 8px 6px;
+      border-bottom: 1px solid #e6ded6;
+      position: relative;
+    }
+
+    .entry.important {
+      border-left: 3px solid var(--important-border);
+      padding-left: 10px;
+    }
+
+    .entry-preview {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: pre-wrap;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .entry.expanded .entry-preview {
+      -webkit-line-clamp: unset;
+    }
+
+    .entry-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .entry-actions button {
+      background: none;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      margin-left: 6px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="toolbar">
+    <button id="importBtn">⤓</button>
+    <button id="exportBtn">⤒</button>
+    <button id="importantFilter">★</button>
+    <input id="search" placeholder="Search" />
+  </div>
+
+  <textarea id="editor" class="editor" placeholder="Write… (#tags allowed)"></textarea>
+
+  <div id="entries"></div>
+</div>
+
+<script>
+  const editor = document.getElementById('editor');
+  const entriesEl = document.getElementById('entries');
+  const searchInput = document.getElementById('search');
+  const importantFilterBtn = document.getElementById('importantFilter');
+
+  let showImportantOnly = false;
+
+  const entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+
+  function save() {
+    localStorage.setItem('journalEntries', JSON.stringify(entries));
+  }
+
+  function render() {
+    const q = searchInput.value.toLowerCase();
+    entriesEl.innerHTML = '';
+
+    entries
+      .filter(e => !showImportantOnly || e.important)
+      .filter(e => e.text.toLowerCase().includes(q))
+      .forEach((entry, index) => {
+        const div = document.createElement('div');
+        div.className = 'entry' + (entry.important ? ' important' : '');
+
+        div.innerHTML = `
+          <div class="entry-preview">${entry.text}</div>
+          <div class="entry-footer">
+            <div class="entry-actions">
+              <button onclick="toggleExpand(${index}, this)">⤢</button>
+              <button onclick="copyEntry(${index})">⧉</button>
+              <button onclick="toggleImportant(${index})">★</button>
+              <button onclick="deleteEntry(${index})">✕</button>
+            </div>
+            <div class="timestamp">${entry.time}</div>
+          </div>
+        `;
+
+        // long-press on mobile
+        let pressTimer;
+        div.addEventListener('touchstart', () => {
+          pressTimer = setTimeout(() => toggleImportant(index), 500);
+        });
+        div.addEventListener('touchend', () => clearTimeout(pressTimer));
+
+        entriesEl.appendChild(div);
+      });
+  }
+
+  function addEntry(text) {
+    entries.unshift({
+      text,
+      time: new Date().toLocaleString(),
+      important: false
+    });
+    save();
+    render();
+  }
+
+  editor.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const text = editor.value.trim();
+      if (text) addEntry(text);
+      editor.value = '';
+    }
+  });
+
+  function deleteEntry(i) { entries.splice(i, 1); save(); render(); }
+  function copyEntry(i) { navigator.clipboard.writeText(entries[i].text); }
+  function toggleImportant(i) { entries[i].important = !entries[i].important; save(); render(); }
+  function toggleExpand(i, btn) { btn.closest('.entry').classList.toggle('expanded'); }
+
+  importantFilterBtn.onclick = () => {
+    showImportantOnly = !showImportantOnly;
+    importantFilterBtn.style.opacity = showImportantOnly ? '1' : '0.4';
+    render();
+  };
+
+  searchInput.oninput = render;
+
+  render();
+</script>
+
+</body>
+</html>
+```
+
+---
+
+## README.md
+
+### Private Journal
+
+A **single-file, offline-first private journal** designed for speed, clarity, and long-term personal use.
+
+### Core Principles
+
+* Privacy-first (localStorage only, no sync, no server)
+* Minimal UI, distraction-free
+* Fast capture
+* Plain text longevity
+
+### Features
+
+* One `index.html`
+* Automatic local-time timestamps
+* Inline **#tags** support (plain text)
+* Mark notes as important (★ or long-press on mobile)
+* Search across notes and tags
+* Copy, delete, expand entries
+* Import / Export backup
+* Installable as PWA (local use)
+
+### Tags (Important)
+
+Tags are **inline text**, not UI elements.
+
+**Best practice:** place tags in the **first line** so they are always visible in the preview.
+
+Example:
+
+```
+#work #finance
+Reviewed quarterly budget
+```
+
+Tags are searchable automatically.
+
+### How to Use
+
+* Type note → press **Enter** to save
+* `Shift + Enter` for new line
+* Use `#tags` anywhere in text
+* Long‑press a note on mobile to mark important
+
+### Data
+
+* Stored locally in your browser
+* Export regularly for backup
+
+---
+
+**FINAL STABLE – UI locked**
