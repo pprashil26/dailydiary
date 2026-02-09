@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Private Journal</title>
+
+<style>
+  :root {
+    --paper: #faf8f3;
+    --ink: #1e1e1e;
+    --muted: #666;
+    --line: #e2e2e2;
+    --accent: #b00020;
+  }
+
+  body {
+    margin: 0;
+    background: #ddd;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+  }
+
+  .page {
+    max-width: 820px;
+    margin: 24px auto;
+    background: var(--paper);
+    padding: 20px 24px 28px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .topbar button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .topbar button.active {
+    color: var(--accent);
+  }
+
+  /* Input */
+  textarea {
+    width: 100%;
+    resize: none;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    font-weight: 600;
+    background: transparent;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /* Entries */
+  .entry {
+    border-top: 1px solid var(--line);
+    padding: 10px 0;
+  }
+
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .entry-text {
+    font-size: 17px;
+    font-weight: 600;
+    white-space: pre-wrap;
+    flex: 1;
+  }
+
+  .timestamp {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .actions {
+    margin-top: 4px;
+    display: flex;
+    gap: 14px;
+    font-size: 13px;
+  }
+
+  .actions span {
+    cursor: pointer;
+    color: var(--muted);
+    user-select: none;
+  }
+
+  .actions span.important {
+    color: var(--accent);
+    font-weight: 700;
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+  <div class="topbar">
+    <button id="filterImportant">Important</button>
+    <button onclick="exportNotes()">Export</button>
+    <button onclick="importNotes()">Import</button>
+  </div>
+
+  <textarea id="noteInput" rows="3" placeholder="Write… (Enter to save)"></textarea>
+
+  <div id="entries"></div>
+</div>
+
+<script>
+let notes = JSON.parse(localStorage.getItem("journal") || "[]");
+let showImportantOnly = false;
+
+const input = document.getElementById("noteInput");
+const entries = document.getElementById("entries");
+const filterBtn = document.getElementById("filterImportant");
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    if (!input.value.trim()) return;
+
+    notes.unshift({
+      text: input.value.trim(),
+      time: new Date().toLocaleString(),
+      important: false
+    });
+
+    input.value = "";
+    save();
+    render();
+  }
+});
+
+filterBtn.onclick = () => {
+  showImportantOnly = !showImportantOnly;
+  filterBtn.classList.toggle("active", showImportantOnly);
+  render();
+};
+
+function render() {
+  entries.innerHTML = "";
+
+  notes
+    .filter(n => !showImportantOnly || n.important)
+    .forEach((n, i) => {
+      const div = document.createElement("div");
+      div.className = "entry";
+
+      div.innerHTML = `
+        <div class="entry-header">
+          <div class="entry-text">${n.text}</div>
+          <div class="timestamp">${n.time}</div>
+        </div>
+        <div class="actions">
+          <span onclick="toggleImportant(${i})" class="${n.important ? "important" : ""}">!</span>
+          <span onclick="copyNote(${i})">copy</span>
+          <span onclick="deleteNote(${i})">delete</span>
+        </div>
+      `;
+      entries.appendChild(div);
+    });
+}
+
+function toggleImportant(i) {
+  notes[i].important = !notes[i].important;
+  save();
+  render();
+}
+
+function copyNote(i) {
+  navigator.clipboard.writeText(notes[i].text);
+}
+
+function deleteNote(i) {
+  notes.splice(i, 1);
+  save();
+  render();
+}
+
+function save() {
+  localStorage.setItem("journal", JSON.stringify(notes));
+}
+
+function exportNotes() {
+  const blob = new Blob([JSON.stringify(notes, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "journal-backup.json";
+  a.click();
+}
+
+function importNotes() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "application/json";
+  input.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      notes = JSON.parse(reader.result);
+      save();
+      render();
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  input.click();
+}
+
+render();
+</script>
+</body>
+</html>
