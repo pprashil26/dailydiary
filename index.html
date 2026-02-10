@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Private Journal</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+/* ===== EXISTING UI — UNCHANGED ===== */
+body {
+  font-family: "Consolas", monospace;
+  margin: 0;
+  background: #3b2f2a; 
+  color: #111;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4rem;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+#page {
+  background: #fffdf5;
+  width: 700px;
+  padding: 0.7rem 1.5rem;
+  box-shadow: 0 0 12px rgba(0,0,0,0.12);
+  box-sizing: border-box;
+  position: relative;
+}
+#page::before {
+  content: "";
+  position: absolute;
+  left: 2rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #f44;
+}
+h1 {
+  text-align: center;
+  margin: 0 0 0.3rem 0;
+  font-size: 1.1rem;
+}
+#backupContainer {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+  margin-bottom: 0.3rem;
+}
+#backupContainer button {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.35rem;
+  cursor: pointer;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+#importantFilter {
+  opacity: 0.4;
+}
+#importantFilter.active {
+  opacity: 1;
+}
+#inputContainer {
+  position: sticky;
+  top: 0;
+  background: #fffdf5;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  z-index: 1;
+}
+#inputContainer .reminder {
+  width: 100%;
+  font-size: 0.75rem;
+  color: #555;
+  margin-bottom: 0.15rem;
+}
+#newEntry {
+  flex: 1;
+  padding: 0.3rem;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  resize: vertical;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fffdf5;
+}
+#addBtn, #boldBtn, #capsBtn, #timestampBtn {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #f5f5f0;
+}
+#entries {
+  max-height: 75vh;
+  overflow-y: auto;
+  margin-top: 0.4rem;
+}
+.entry {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0.25rem 0.2rem 0.2rem 0.2rem;
+  position: relative;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.entry::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0.2rem;
+  height: 1px;
+  background: rgba(180, 200, 240, 0.4);
+}
+.note {
+  flex: 1;
+  margin-left: 3rem; /* ensures text starts after red line */
+  max-height: 4.2rem;
+  overflow: hidden;
+  color: #111;
+}
+.note.expanded { max-height: none; }
+.timestamp {
+  width: 9rem;
+  font-size: 0.85rem;
+  text-align: right;
+  padding-right: 0.4rem;
+  color: #888;
+}
+.actions {
+  display: flex;
+  align-items: center;
+}
+.actions button {
+  margin-left: 0.15rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.importance {
+  opacity: 0.4;
+}
+.importance.active {
+  opacity: 1;
+}
+.expandBtn {
+  font-size: 0.7rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #0077cc;
+}
+#importFile { display: none; }
+</style>
+</head>
+
+<body>
+<div id="page">
+  <h1>Private Journal</h1>
+
+  <div id="backupContainer">
+    <button id="importantFilter" title="Filter important">⭐</button>
+    <button id="exportBtn">Export</button>
+    <button id="importBtn">Import</button>
+    <input type="file" id="importFile" accept=".txt">
+    <input type="text" id="searchInput" placeholder="Search..." style="margin-left:5px; font-size:0.75rem;">
+  </div>
+
+  <div id="inputContainer">
+    <div class="reminder">Shift+Enter for line break, Enter to save</div>
+    <textarea id="newEntry" placeholder="Write note..." rows="2"></textarea>
+    <button id="addBtn">+</button>
+    <button id="boldBtn" title="Bold">B</button>
+    <button id="capsBtn" title="Caps">CAPS</button>
+    <button id="timestampBtn" title="Insert timestamp">🕒</button>
+  </div>
+
+  <div id="entries"></div>
+</div>
+
+<script>
+/* ===== LOGIC (UI SAFE) ===== */
+const entriesDiv = document.getElementById('entries');
+const newEntryInput = document.getElementById('newEntry');
+const importantFilterBtn = document.getElementById('importantFilter');
+const addBtn = document.getElementById('addBtn');
+const boldBtn = document.getElementById('boldBtn');
+const capsBtn = document.getElementById('capsBtn');
+const timestampBtn = document.getElementById('timestampBtn');
+const searchInput = document.getElementById('searchInput');
+
+let entries = JSON.parse(localStorage.getItem('journalEntries') || '[]');
+let showImportantOnly = false;
+let boldOn = false;
+let capsOn = false;
+
+importantFilterBtn.onclick = () => {
+  showImportantOnly = !showImportantOnly;
+  importantFilterBtn.classList.toggle('active', showImportantOnly);
+  renderEntries();
+};
+
+boldBtn.onclick = () => { boldOn = !boldOn; boldBtn.style.opacity = boldOn ? '1' : '0.6'; };
+capsBtn.onclick = () => { capsOn = !capsOn; capsBtn.style.opacity = capsOn ? '1' : '0.6'; };
+
+timestampBtn.onclick = () => {
+  const now = new Date();
+  const ts = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit'});
+  newEntryInput.value += ts;
+  newEntryInput.focus();
+};
+
+addBtn.onclick = addEntry;
+
+newEntryInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addEntry(); }
+});
+
+searchInput.addEventListener('input', () => renderEntries());
+
+function addEntry() {
+  let text = newEntryInput.value.trim();
+  if (!text) return;
+
+  if (capsOn) text = text.toUpperCase();
+  if (boldOn) text = "**" + text + "**";
+
+  const now = new Date();
+  const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  entries.unshift({ text, timestamp, important: false });
+  localStorage.setItem('journalEntries', JSON.stringify(entries));
+  newEntryInput.value = '';
+  renderEntries();
+}
+
+function renderEntries() {
+  const query = searchInput.value.toLowerCase();
+  entriesDiv.innerHTML = '';
+
+  entries
+    .filter(e => (!showImportantOnly || e.important) && (!query || e.text.toLowerCase().includes(query)))
+    .forEach((entry, i) => {
+      const div = document.createElement('div');
+      div.className = 'entry';
+
+      const note = document.createElement('span');
+      note.className = 'note';
+      note.textContent = entry.text;
+
+      const ts = document.createElement('span');
+      ts.className = 'timestamp';
+      ts.textContent = entry.timestamp;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const imp = document.createElement('button');
+      imp.textContent = '⭐';
+      imp.className = 'importance' + (entry.important ? ' active' : '');
+      imp.onclick = () => { entry.important = !entry.important; localStorage.setItem('journalEntries', JSON.stringify(entries)); renderEntries(); };
+
+      const copy = document.createElement('button');
+      copy.textContent = '📋';
+      copy.onclick = () => navigator.clipboard.writeText(entry.text);
+
+      const del = document.createElement('button');
+      del.textContent = '🗑';
+      del.onclick = () => { entries.splice(i,1); localStorage.setItem('journalEntries', JSON.stringify(entries)); renderEntries(); };
+
+      actions.append(imp, copy, del);
+
+      if (entry.text.split('\n').length > 3 || entry.text.length > 120) {
+        const expand = document.createElement('button');
+        expand.className = 'expandBtn';
+        expand.textContent = '▶';
+        expand.onclick = () => { note.classList.toggle('expanded'); expand.textContent = note.classList.contains('expanded') ? '▼' : '▶'; };
+        actions.appendChild(expand);
+      }
+
+      div.append(note, ts, actions);
+      entriesDiv.appendChild(div);
+    });
+}
+
+// Export / Import
+document.getElementById('exportBtn').onclick = () => {
+  const content = entries.map(e => `[${e.timestamp}]\n${e.text}\n------------------------`).join('\n');
+  const blob = new Blob([content], {type:"text/plain"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `journal_backup_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+const importFile = document.getElementById('importFile');
+document.getElementById('importBtn').onclick = () => importFile.click();
+importFile.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const text = evt.target.result;
+      const parts = text.split('------------------------').map(s => s.trim()).filter(s=>s);
+      const imported = parts.map(part=>{
+        const lines = part.split('\n');
+        const tsMatch = lines[0].match(/\[(.+)\]/);
+        const timestamp = tsMatch ? tsMatch[1] : new Date().toLocaleString();
+        const noteText = lines.slice(1).join('\n').trim();
+        return { timestamp, text: noteText, important:false };
+      });
+      entries = imported.reverse();
+      localStorage.setItem('journalEntries', JSON.stringify(entries));
+      renderEntries();
+      alert("Journal imported successfully!");
+    } catch(err){ alert("Failed to import. File might be corrupted."); }
+  };
+  reader.readAsText(file);
+});
+
+// Register service worker
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+renderEntries();
+</script>
+</body>
+</html>
