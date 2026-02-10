@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Private Journal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+  body {
+    margin: 0;
+    background: #3b2f2a;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .page {
+    max-width: 780px;
+    margin: 20px auto;
+    background: #fdfaf6;
+    min-height: 100vh;
+    padding: 24px 28px;
+    box-sizing: border-box;
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    opacity: 0.75;
+  }
+
+  .icon-btn.active {
+    font-weight: 700;
+    opacity: 1;
+  }
+
+  .search {
+    flex: 1;
+    padding: 4px 6px;
+    font-size: 13px;
+  }
+
+  .note-instruction {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-bottom: 4px;
+  }
+
+  .new-note {
+    position: relative;
+    border-left: 2px solid #c94b3c;
+    padding-left: 14px;
+    margin-bottom: 16px;
+  }
+
+  textarea {
+    width: 100%;
+    border: none;
+    resize: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 500;
+    background: transparent;
+  }
+
+  .note-actions {
+    position: absolute;
+    right: 0;
+    top: -22px;
+    display: flex;
+    gap: 6px;
+  }
+
+  .entry {
+    border-left: 2px solid #c94b3c;
+    padding-left: 14px;
+    margin-bottom: 12px;
+  }
+
+  .entry-text {
+    font-size: 15px;
+    font-weight: 500;
+    white-space: pre-wrap;
+  }
+
+  .timestamp {
+    font-size: 11px;
+    opacity: 0.45;
+    text-align: right;
+    margin-top: 2px;
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <div class="top-bar">
+    <button class="icon-btn" onclick="exportNotes()">Export</button>
+    <button class="icon-btn" onclick="importNotes()">Import</button>
+    <input class="search" id="search" placeholder="Search..." oninput="renderNotes()" />
+  </div>
+
+  <div class="note-instruction">
+    Shift+Enter for line break, Enter to save
+  </div>
+
+  <div class="new-note">
+    <div class="note-actions">
+      <button id="boldBtn" class="icon-btn" onclick="toggleBold()">B</button>
+      <button id="capsBtn" class="icon-btn" onclick="toggleCaps()">CAPS</button>
+      <button class="icon-btn" onclick="saveNote()">+</button>
+    </div>
+    <textarea id="noteInput" rows="3"
+      onkeydown="handleKey(event)"></textarea>
+  </div>
+
+  <div id="entries"></div>
+
+</div>
+
+<script>
+let notes = JSON.parse(localStorage.getItem("notes") || "[]");
+
+let boldActive = false;
+let capsActive = false;
+
+function toggleBold() {
+  boldActive = !boldActive;
+  document.getElementById("boldBtn").classList.toggle("active", boldActive);
+}
+
+function toggleCaps() {
+  capsActive = !capsActive;
+  document.getElementById("capsBtn").classList.toggle("active", capsActive);
+}
+
+function handleKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    saveNote();
+  }
+}
+
+function saveNote() {
+  let text = document.getElementById("noteInput").value.trim();
+  if (!text) return;
+
+  if (capsActive) {
+    text = text.toUpperCase();
+  }
+
+  if (boldActive) {
+    text = `**${text}**`;
+  }
+
+  notes.unshift({
+    text,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("notes", JSON.stringify(notes));
+  document.getElementById("noteInput").value = "";
+
+  boldActive = false;
+  capsActive = false;
+  document.getElementById("boldBtn").classList.remove("active");
+  document.getElementById("capsBtn").classList.remove("active");
+
+  renderNotes();
+}
+
+function renderNotes() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const wrap = document.getElementById("entries");
+  wrap.innerHTML = "";
+
+  notes.filter(n => n.text.toLowerCase().includes(q)).forEach(n => {
+    const div = document.createElement("div");
+    div.className = "entry";
+    div.innerHTML = `
+      <div class="entry-text">${formatText(n.text)}</div>
+      <div class="timestamp">${n.time}</div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function formatText(t) {
+  if (t.startsWith("**") && t.endsWith("**")) {
+    return "<strong>" + t.slice(2, -2) + "</strong>";
+  }
+  return t;
+}
+
+function exportNotes() {
+  const blob = new Blob([JSON.stringify(notes)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "journal.json";
+  a.click();
+}
+
+function importNotes() {
+  const i = document.createElement("input");
+  i.type = "file";
+  i.onchange = e => {
+    const r = new FileReader();
+    r.onload = () => {
+      notes = JSON.parse(r.result);
+      localStorage.setItem("notes", JSON.stringify(notes));
+      renderNotes();
+    };
+    r.readAsText(e.target.files[0]);
+  };
+  i.click();
+}
+
+renderNotes();
+</script>
+</body>
+</html>
