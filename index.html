@@ -423,10 +423,17 @@ div.className='entry'
 const note=document.createElement('span')
 note.className='note'
 
+function formatTextWithLineBreaks(text) {
+    // Escape HTML to prevent XSS
+    const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Replace line breaks with <br>
+    return escaped.replace(/\n/g,'<br>')
+}
+
 if(entry.text.startsWith("**") && entry.text.endsWith("**")){
-note.innerHTML="<strong>"+entry.text.slice(2,-2)+"</strong>"
+    note.innerHTML="<strong>"+formatTextWithLineBreaks(entry.text.slice(2,-2))+"</strong>"
 }else{
-note.textContent=entry.text
+    note.innerHTML = formatTextWithLineBreaks(entry.text)
 }
 
 const ts=document.createElement('span')
