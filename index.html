@@ -191,20 +191,23 @@ h1 {
 
 /* ===== MOBILE ===== */
 @media (max-width: 480px) {
-  body { font-size: 0.85rem; }
-  h1 { font-size: 1rem; }
-  #newEntry { font-size: 0.9rem; }
-  #backupContainer input,
-  #toolbar button { font-size: 0.7rem; padding: 0.2rem 0.3rem; }
-
-  /* REMOVE fixed width, keep timestamp below note */
+  .note {
+    flex-basis: 100%;
+    margin-left: 1rem;
+  }
   .timestamp {
-    flex-basis: 100%;      /* ensure it goes to new line */
-    margin-left: 1rem;     /* align nicely with note */
-    margin-top: 0.2rem;
+    flex-basis: 100%;
+    margin-left: 1rem;
+    margin-top: 0.1rem;
     font-size: 0.7rem;
   }
+  .actions {
+    flex-basis: 100%;
+    margin-left: 1rem;
+    margin-top: 0.1rem;
+  }
 }
+
 @media (max-width: 360px) {
   #page { padding: 0.5rem 0.5rem; }
   #newEntry { font-size: 0.8rem; }
