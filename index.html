@@ -142,14 +142,15 @@ padding:.25rem .2rem .4rem .2rem;
 position:relative;
 }
 
-.entry::before{
-content:"";
-position:absolute;
-left:0;
-right:0;
-top:.2rem;
-height:1px;
-background:rgba(180,200,240,.4);
+.entry{
+display:grid;
+grid-template-columns:1fr auto;
+grid-template-areas:
+"note actions"
+"timestamp timestamp";
+align-items:start;
+padding:.25rem .2rem .4rem .2rem;
+position:relative;
 }
 
 .note{
@@ -172,7 +173,8 @@ margin-top:.2rem;
 .actions{
 grid-area:actions;
 display:flex;
-align-items:center;
+align-items:flex-start;
+justify-content:flex-end;
 }
 
 .actions button{
@@ -203,6 +205,10 @@ color:#0077cc;
 .note{margin-left:1rem}
 .timestamp{margin-left:1rem;font-size:.7rem}
 
+}
+
+.entry { 
+  row-gap: 0.2rem; /* ensures consistent spacing between note and timestamp on mobile */
 }
 
 </style>
