@@ -124,9 +124,9 @@ h1 {
 
 .entry {
   display: flex;
-  justify-content: flex-start;
+  flex-wrap: wrap;   /* allows timestamp to move to next line */
   align-items: flex-start;
-  padding: 0.25rem 0.2rem 0.2rem 0.2rem;
+  padding: 0.25rem 0.2rem 0.4rem 0.2rem;
   position: relative;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -155,11 +155,12 @@ h1 {
 
 /* ✅ NARROWER TIMESTAMP */
 .timestamp {
-  width: 6rem;
-  font-size: 0.85rem;
-  text-align: right;
-  padding-right: 0.4rem;
+  flex-basis: 100%;      /* forces it to new row */
+  margin-left: 1.5rem;   /* align with note text */
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
   color: #888;
+}
 }
 
 .actions {
@@ -440,4 +441,4 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 renderEntries();
 </script>
 </body>
-</html>
+</html>	
