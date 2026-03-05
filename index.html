@@ -142,9 +142,10 @@ h1 {
   background: rgba(180, 200, 240, 0.4);
 }
 
+/* ✅ TEXT CLOSER TO RED LINE */
 .note {
   flex: 1;
-  margin-left: 3rem;
+  margin-left: 2.2rem;
   max-height: 4.2rem;
   overflow: hidden;
   color: #111;
@@ -152,8 +153,9 @@ h1 {
 
 .note.expanded { max-height: none; }
 
+/* ✅ NARROWER TIMESTAMP */
 .timestamp {
-  width: 9rem;
+  width: 6rem;
   font-size: 0.85rem;
   text-align: right;
   padding-right: 0.4rem;
@@ -186,14 +188,15 @@ h1 {
 
 #importFile { display: none; }
 
-/* ===== MOBILE RESPONSIVENESS ===== */
+/* ===== MOBILE ===== */
 @media (max-width: 480px) {
   body { font-size: 0.85rem; }
   h1 { font-size: 1rem; }
   #newEntry { font-size: 0.9rem; }
   #backupContainer input,
   #toolbar button { font-size: 0.7rem; padding: 0.2rem 0.3rem; }
-  .timestamp { width: 5.5rem; font-size: 0.75rem; } /* shorter on mobile */
+
+  .timestamp { width: 4.8rem; font-size: 0.75rem; }
 }
 
 @media (max-width: 360px) {
@@ -257,6 +260,18 @@ function autoResize() {
 }
 newEntryInput.addEventListener('input', autoResize);
 
+/* ✅ COMPACT TIMESTAMP */
+function getShortTimestamp() {
+  const now = new Date();
+  const day = now.getDate();
+  const month = now.getMonth() + 1;
+  const hours = now.getHours();
+  const mins = String(now.getMinutes()).padStart(2, '0');
+  return `${day}/${month} ${hours}:${mins}`;
+}
+
+/* ---- Everything else unchanged below ---- */
+
 importantFilterBtn.onclick = () => {
   showImportantOnly = !showImportantOnly;
   importantFilterBtn.classList.toggle('active', showImportantOnly);
@@ -281,17 +296,6 @@ capsBtn.onclick = () => {
   newEntryInput.style.textTransform = capsOn ? 'uppercase' : 'none';
 };
 
-function getShortTimestamp() {
-  const now = new Date();
-  if (window.innerWidth <= 480) { // mobile
-    return (now.getMonth()+1) + '/' + now.getDate() + ' ' +
-           now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
-  } else {
-    return now.toLocaleDateString() + ' ' +
-           now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-}
-
 timestampBtn.onclick = () => {
   newEntryInput.value += getShortTimestamp();
   autoResize();
@@ -300,7 +304,6 @@ timestampBtn.onclick = () => {
 
 addBtn.onclick = addEntry;
 
-// Enter inserts line break
 newEntryInput.addEventListener('keypress', e => {
   if (e.key === 'Enter') return;
 });
