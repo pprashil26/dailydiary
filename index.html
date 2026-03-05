@@ -122,10 +122,10 @@ h1 {
   margin-top: 0.4rem;
 }
 
+/* ===== ENTRY FIX: TIMESTAMP BOTTOM ===== */
 .entry {
   display: flex;
-  flex-wrap: wrap;   /* allows timestamp to move to next line */
-  align-items: flex-start;
+  flex-direction: column; /* stack note/actions above timestamp */
   padding: 0.25rem 0.2rem 0.4rem 0.2rem;
   position: relative;
   white-space: pre-wrap;
@@ -142,10 +142,15 @@ h1 {
   background: rgba(180, 200, 240, 0.4);
 }
 
-/* ✅ TEXT CLOSER TO RED LINE */
+.noteContainer {
+  display: flex;         /* note + actions in a row */
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+/* note text */
 .note {
   flex: 1;
-  margin-left: 1.5rem;
   max-height: 4.2rem;
   overflow: hidden;
   color: #111;
@@ -153,15 +158,13 @@ h1 {
 
 .note.expanded { max-height: none; }
 
-/* ✅ NARROWER TIMESTAMP */
+/* timestamp below noteContainer */
 .timestamp {
-  flex-basis: 100%;      /* forces it to new row */
-  margin-left: 1.5rem;   /* align with note text */
+  margin-left: 1.5rem;
   margin-top: 0.2rem;
   font-size: 0.75rem;
   color: #888;
 }
-
 
 .actions {
   display: flex;
@@ -196,7 +199,6 @@ h1 {
     margin-left: 1rem;
   }
   .timestamp {
-    flex-basis: 100%;
     margin-left: 1rem;
     margin-top: 0.1rem;
     font-size: 0.7rem;
@@ -279,8 +281,7 @@ function getShortTimestamp() {
   return `${day}/${month} ${hours}:${mins}`;
 }
 
-/* ---- Everything else unchanged below ---- */
-
+/* ---- BUTTONS ---- */
 importantFilterBtn.onclick = () => {
   showImportantOnly = !showImportantOnly;
   importantFilterBtn.classList.toggle('active', showImportantOnly);
@@ -312,22 +313,16 @@ timestampBtn.onclick = () => {
 };
 
 addBtn.onclick = addEntry;
-
-newEntryInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter') return;
-});
-
+newEntryInput.addEventListener('keypress', e => { if (e.key === 'Enter') return; });
 searchInput.addEventListener('input', renderEntries);
 
 function addEntry() {
   let text = newEntryInput.value.trim();
   if (!text) return;
-
   if (capsOn) text = text.toUpperCase();
   if (boldOn) text = `**${text}**`;
 
   const timestamp = getShortTimestamp();
-
   entries.unshift({ text, timestamp, important: false });
   localStorage.setItem('journalEntries', JSON.stringify(entries));
   newEntryInput.value = '';
@@ -352,18 +347,16 @@ function renderEntries() {
       const div = document.createElement('div');
       div.className = 'entry';
 
+      const noteContainer = document.createElement('div');
+      noteContainer.className = 'noteContainer';
+
       const note = document.createElement('span');
       note.className = 'note';
-
       if (entry.text.startsWith("**") && entry.text.endsWith("**")) {
         note.innerHTML = "<strong>" + entry.text.slice(2, -2) + "</strong>";
       } else {
         note.textContent = entry.text;
       }
-
-      const ts = document.createElement('span');
-      ts.className = 'timestamp';
-      ts.textContent = entry.timestamp;
 
       const actions = document.createElement('div');
       actions.className = 'actions';
@@ -402,11 +395,17 @@ function renderEntries() {
         actions.appendChild(expand);
       }
 
-      div.append(note, ts, actions);
+      noteContainer.append(note, actions);
+      const ts = document.createElement('span');
+      ts.className = 'timestamp';
+      ts.textContent = entry.timestamp;
+
+      div.append(noteContainer, ts);
       entriesDiv.appendChild(div);
     });
 }
 
+/* EXPORT / IMPORT */
 document.getElementById('exportBtn').onclick = () => {
   const content = entries.map(e => `[${e.timestamp}]\n${e.text}\n------------------------`).join('\n');
   const blob = new Blob([content], {type:"text/plain"});
@@ -445,8 +444,7 @@ importFile.addEventListener('change', (e) => {
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
 renderEntries();
 </script>
 </body>
-</html>	
+</html>
