@@ -122,10 +122,10 @@ h1 {
   margin-top: 0.4rem;
 }
 
-/* ===== ENTRY FIX: TIMESTAMP BOTTOM ===== */
 .entry {
   display: flex;
-  flex-direction: column; /* stack note/actions above timestamp */
+  flex-wrap: wrap;
+  align-items: flex-start;
   padding: 0.25rem 0.2rem 0.4rem 0.2rem;
   position: relative;
   white-space: pre-wrap;
@@ -142,15 +142,16 @@ h1 {
   background: rgba(180, 200, 240, 0.4);
 }
 
-.noteContainer {
-  display: flex;         /* note + actions in a row */
-  align-items: flex-start;
-  gap: 0.25rem;
+/* NOTE + TIMESTAMP */
+.note-timestamp {
+  display: flex;
+  flex-direction: column;
 }
 
-/* note text */
+/* ✅ TEXT CLOSER TO RED LINE */
 .note {
   flex: 1;
+  margin-left: 1.5rem;
   max-height: 4.2rem;
   overflow: hidden;
   color: #111;
@@ -158,7 +159,7 @@ h1 {
 
 .note.expanded { max-height: none; }
 
-/* timestamp below noteContainer */
+/* ✅ NARROWER TIMESTAMP */
 .timestamp {
   margin-left: 1.5rem;
   margin-top: 0.2rem;
@@ -193,27 +194,17 @@ h1 {
 #importFile { display: none; }
 
 /* ===== MOBILE ===== */
-/* ===== MOBILE ===== */
 @media (max-width: 480px) {
   .entry {
-    flex-direction: column;  /* stack note, timestamp, actions vertically */
-    align-items: flex-start; 
+    flex-direction: column;   /* stack note-timestamp and actions */
+    align-items: flex-start;
   }
-  .note {
-    flex-basis: auto;
-    margin-left: 1rem;
+  .note-timestamp {
+    flex-direction: column;
   }
-  .timestamp {
-    flex-basis: auto;
-    margin-left: 1rem;
-    margin-top: 0.1rem;
-    font-size: 0.7rem;
-  }
-  .actions {
-    flex-basis: auto;
-    margin-left: 1rem;
-    margin-top: 0.1rem;
-  }
+  .note { margin-left: 1rem; }
+  .timestamp { margin-left: 1rem; margin-top: 0.1rem; font-size: 0.7rem; }
+  .actions { margin-left: 1rem; margin-top: 0.1rem; }
 }
 
 @media (max-width: 360px) {
@@ -287,7 +278,7 @@ function getShortTimestamp() {
   return `${day}/${month} ${hours}:${mins}`;
 }
 
-/* ---- BUTTONS ---- */
+/* BUTTON EVENTS */
 importantFilterBtn.onclick = () => {
   showImportantOnly = !showImportantOnly;
   importantFilterBtn.classList.toggle('active', showImportantOnly);
@@ -319,15 +310,19 @@ timestampBtn.onclick = () => {
 };
 
 addBtn.onclick = addEntry;
-newEntryInput.addEventListener('keypress', e => { if (e.key === 'Enter') return; });
+
+newEntryInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') return;
+});
+
 searchInput.addEventListener('input', renderEntries);
 
+/* ADD ENTRY */
 function addEntry() {
   let text = newEntryInput.value.trim();
   if (!text) return;
   if (capsOn) text = text.toUpperCase();
   if (boldOn) text = `**${text}**`;
-
   const timestamp = getShortTimestamp();
   entries.unshift({ text, timestamp, important: false });
   localStorage.setItem('journalEntries', JSON.stringify(entries));
@@ -340,116 +335,105 @@ function addEntry() {
   renderEntries();
 }
 
+/* RENDER ENTRIES */
 function renderEntries() {
   const query = searchInput.value.toLowerCase();
   entriesDiv.innerHTML = '';
+  entries.filter(e => (!showImportantOnly || e.important) &&
+    (!query || e.text.toLowerCase().includes(query)))
+  .forEach((entry,i)=>{
+    if(focusMode) return;
 
-  entries
-    .filter(e => (!showImportantOnly || e.important) &&
-      (!query || e.text.toLowerCase().includes(query)))
-    .forEach((entry, i) => {
-      if (focusMode) return;
+    const div = document.createElement('div');
+    div.className = 'entry';
 
-      const div = document.createElement('div');
-      div.className = 'entry';
+    const note = document.createElement('span');
+    note.className = 'note';
+    if(entry.text.startsWith("**") && entry.text.endsWith("**")){
+      note.innerHTML = "<strong>" + entry.text.slice(2,-2) + "</strong>";
+    } else note.textContent = entry.text;
 
-      const noteContainer = document.createElement('div');
-      noteContainer.className = 'noteContainer';
+    const ts = document.createElement('span');
+    ts.className = 'timestamp';
+    ts.textContent = entry.timestamp;
 
-      const note = document.createElement('span');
-      note.className = 'note';
-      if (entry.text.startsWith("**") && entry.text.endsWith("**")) {
-        note.innerHTML = "<strong>" + entry.text.slice(2, -2) + "</strong>";
-      } else {
-        note.textContent = entry.text;
-      }
+    // wrap note + timestamp
+    const noteTimestampWrapper = document.createElement('div');
+    noteTimestampWrapper.className = 'note-timestamp';
+    noteTimestampWrapper.append(note, ts);
 
-      const actions = document.createElement('div');
-      actions.className = 'actions';
+    const actions = document.createElement('div');
+    actions.className = 'actions';
 
-      const imp = document.createElement('button');
-      imp.textContent = '⭐';
-      imp.className = 'importance' + (entry.important ? ' active' : '');
-      imp.onclick = () => {
-        entry.important = !entry.important;
-        localStorage.setItem('journalEntries', JSON.stringify(entries));
-        renderEntries();
-      };
+    const imp = document.createElement('button');
+    imp.textContent = '⭐';
+    imp.className = 'importance' + (entry.important ? ' active' : '');
+    imp.onclick = () => { entry.important = !entry.important; localStorage.setItem('journalEntries', JSON.stringify(entries)); renderEntries(); };
 
-      const copy = document.createElement('button');
-      copy.textContent = '📋';
-      copy.onclick = () => navigator.clipboard.writeText(entry.text);
+    const copy = document.createElement('button');
+    copy.textContent = '📋';
+    copy.onclick = () => navigator.clipboard.writeText(entry.text);
 
-      const del = document.createElement('button');
-      del.textContent = '🗑';
-      del.onclick = () => {
-        entries.splice(i, 1);
-        localStorage.setItem('journalEntries', JSON.stringify(entries));
-        renderEntries();
-      };
+    const del = document.createElement('button');
+    del.textContent = '🗑';
+    del.onclick = () => { entries.splice(i,1); localStorage.setItem('journalEntries', JSON.stringify(entries)); renderEntries(); };
 
-      actions.append(imp, copy, del);
+    actions.append(imp,copy,del);
 
-      if (entry.text.split('\n').length > 3 || entry.text.length > 120) {
-        const expand = document.createElement('button');
-        expand.className = 'expandBtn';
-        expand.textContent = '▶';
-        expand.onclick = () => {
-          note.classList.toggle('expanded');
-          expand.textContent = note.classList.contains('expanded') ? '▼' : '▶';
-        };
-        actions.appendChild(expand);
-      }
+    if(entry.text.split('\n').length >3 || entry.text.length >120){
+      const expand = document.createElement('button');
+      expand.className='expandBtn';
+      expand.textContent='▶';
+      expand.onclick = () => { note.classList.toggle('expanded'); expand.textContent = note.classList.contains('expanded') ? '▼':'▶'; };
+      actions.appendChild(expand);
+    }
 
-      noteContainer.append(note, actions);
-      const ts = document.createElement('span');
-      ts.className = 'timestamp';
-      ts.textContent = entry.timestamp;
-
-      div.append(noteContainer, ts);
-      entriesDiv.appendChild(div);
-    });
+    div.append(noteTimestampWrapper, actions);
+    entriesDiv.appendChild(div);
+  });
 }
 
-/* EXPORT / IMPORT */
-document.getElementById('exportBtn').onclick = () => {
-  const content = entries.map(e => `[${e.timestamp}]\n${e.text}\n------------------------`).join('\n');
+/* EXPORT */
+document.getElementById('exportBtn').onclick = ()=>{
+  const content = entries.map(e=>`[${e.timestamp}]\n${e.text}\n------------------------`).join('\n');
   const blob = new Blob([content], {type:"text/plain"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
+  a.href=url;
   a.download = `journal_backup_${new Date().toISOString().slice(0,10)}.txt`;
   a.click();
   URL.revokeObjectURL(url);
 };
 
+/* IMPORT */
 const importFile = document.getElementById('importFile');
-document.getElementById('importBtn').onclick = () => importFile.click();
-importFile.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt){
+document.getElementById('importBtn').onclick = ()=> importFile.click();
+importFile.addEventListener('change',(e)=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(evt){
     try{
-      const text = evt.target.result;
-      const parts = text.split('------------------------').map(s => s.trim()).filter(s=>s);
-      const imported = parts.map(part=>{
-        const lines = part.split('\n');
-        const tsMatch = lines[0].match(/\[(.+)\]/);
+      const text=evt.target.result;
+      const parts=text.split('------------------------').map(s=>s.trim()).filter(s=>s);
+      const imported=parts.map(part=>{
+        const lines=part.split('\n');
+        const tsMatch=lines[0].match(/\[(.+)\]/);
         const timestamp = tsMatch ? tsMatch[1] : new Date().toLocaleString();
-        const noteText = lines.slice(1).join('\n').trim();
+        const noteText=lines.slice(1).join('\n').trim();
         return { timestamp, text: noteText, important:false };
       });
-      entries = imported.reverse();
+      entries=imported.reverse();
       localStorage.setItem('journalEntries', JSON.stringify(entries));
       renderEntries();
       alert("Journal imported successfully!");
-    } catch(err){ alert("Failed to import. File might be corrupted."); }
+    }catch(err){ alert("Failed to import. File might be corrupted."); }
   };
   reader.readAsText(file);
 });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
 renderEntries();
 </script>
 </body>
