@@ -292,10 +292,12 @@ timestampBtn.onclick = () => {
 
 addBtn.onclick = addEntry;
 
+// On mobile / all devices, Enter inserts a new line
+// Remove the 'Enter to save' behavior
 newEntryInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    addEntry();
+  if (e.key === 'Enter') {
+    // Just allow normal line break
+    return;
   }
 });
 
