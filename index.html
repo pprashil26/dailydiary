@@ -193,7 +193,7 @@ h1 {
   #newEntry { font-size: 0.9rem; }
   #backupContainer input,
   #toolbar button { font-size: 0.7rem; padding: 0.2rem 0.3rem; }
-  .timestamp { width: 6rem; font-size: 0.75rem; }
+  .timestamp { width: 5.5rem; font-size: 0.75rem; } /* shorter on mobile */
 }
 
 @media (max-width: 360px) {
@@ -218,7 +218,7 @@ h1 {
   </div>
 
   <div id="inputContainer">
-    <div class="reminder">Shift+Enter for line break, Enter to save</div>
+    <div class="reminder">Press Enter for new line, tap + to save</div>
     <textarea id="newEntry" placeholder="Write note..." rows="2"></textarea>
 
     <div id="toolbar">
@@ -233,7 +233,7 @@ h1 {
 </div>
 
 <script>
-// ===== SCRIPT REMAINS UNCHANGED =====
+// ===== SCRIPT =====
 const entriesDiv = document.getElementById('entries');
 const newEntryInput = document.getElementById('newEntry');
 const importantFilterBtn = document.getElementById('importantFilter');
@@ -281,24 +281,28 @@ capsBtn.onclick = () => {
   newEntryInput.style.textTransform = capsOn ? 'uppercase' : 'none';
 };
 
-timestampBtn.onclick = () => {
+function getShortTimestamp() {
   const now = new Date();
-  const ts = now.toLocaleDateString() + ' ' +
-    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  newEntryInput.value += ts;
+  if (window.innerWidth <= 480) { // mobile
+    return (now.getMonth()+1) + '/' + now.getDate() + ' ' +
+           now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  } else {
+    return now.toLocaleDateString() + ' ' +
+           now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+timestampBtn.onclick = () => {
+  newEntryInput.value += getShortTimestamp();
   autoResize();
   newEntryInput.focus();
 };
 
 addBtn.onclick = addEntry;
 
-// On mobile / all devices, Enter inserts a new line
-// Remove the 'Enter to save' behavior
+// Enter inserts line break
 newEntryInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter') {
-    // Just allow normal line break
-    return;
-  }
+  if (e.key === 'Enter') return;
 });
 
 searchInput.addEventListener('input', renderEntries);
@@ -310,10 +314,7 @@ function addEntry() {
   if (capsOn) text = text.toUpperCase();
   if (boldOn) text = `**${text}**`;
 
-  const now = new Date();
-  const timestamp =
-    now.toLocaleDateString() + ' ' +
-    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timestamp = getShortTimestamp();
 
   entries.unshift({ text, timestamp, important: false });
   localStorage.setItem('journalEntries', JSON.stringify(entries));
