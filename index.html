@@ -110,6 +110,17 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   .timestamp{margin-left:1rem;font-size:.7rem}
 }
 .entry { row-gap: 0.2rem; }
+
+#helpContent {
+    width: 100%;
+    padding: .3rem;
+    font-size: .85rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #fefdf5;
+    resize: vertical;
+    margin-bottom: .3rem;
+}
 </style>
 </head>
 
@@ -120,6 +131,7 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
 <div id="backupContainer">
   <button id="importantFilter">⭐</button>
   <button id="focusModeBtn">🎯</button>
+  <button id="helpBtn">💡</button>
   <button id="exportBtn">Export</button>
   <button id="importBtn">Import</button>
   <input type="file" id="importFile" accept=".txt">
@@ -139,6 +151,8 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
 
 <div id="entries"></div>
 </div>
+
+<textarea id="helpContent" rows="5" style="display:none;"></textarea>
 
 <script>
 /* ===== ELEMENTS ===== */
@@ -349,6 +363,26 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js')
 renderEntries()
 newEntryInput.value=''; newEntryInput.style.height='auto'; newEntryInput.style.fontWeight='500'; newEntryInput.style.textTransform='none';
 boldOn=false; capsOn=false; boldBtn.style.opacity='0.6'; capsBtn.style.opacity='0.6';
+
+const helpBtn = document.getElementById('helpBtn');
+const helpContent = document.getElementById('helpContent');
+
+// Load help text from localStorage or default
+helpContent.value = localStorage.getItem('helpText') || "Welcome! This is your editable help file.";
+
+helpBtn.onclick = () => {
+    helpContent.style.display = helpContent.style.display === 'none' ? 'block' : 'none';
+    if(helpContent.style.display === 'block') helpContent.focus();
+};
+
+// Save changes to localStorage (with debounce)
+let saveTimeout;
+helpContent.addEventListener('input', () => {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        localStorage.setItem('helpText', helpContent.value);
+    }, 500);
+});
 </script>
 </body>
 </html>
