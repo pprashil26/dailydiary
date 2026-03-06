@@ -7,639 +7,348 @@
 <link rel="manifest" href="manifest.json">
 
 <style>
-
-/* ===== GENERAL ===== */
-
 body{
-font-family:"Consolas",monospace;
-margin:0;
-background:#3b2f2a;
-color:#111;
-font-size:0.95rem;
-line-height:1.4rem;
-display:flex;
-justify-content:center;
-padding:.5rem 0;
+  font-family:"Consolas",monospace;
+  margin:0;
+  background:#3b2f2a;
+  color:#111;
+  font-size:0.95rem;
+  line-height:1.4rem;
+  display:flex;
+  justify-content:center;
+  padding:.5rem 0;
 }
 
 #page{
-background:#fffdf5;
-width:95%;
-max-width:700px;
-padding:.7rem 1rem;
-box-shadow:0 0 12px rgba(0,0,0,.12);
-position:relative;
+  background:#fffdf5;
+  width:95%;
+  max-width:700px;
+  padding:.7rem 1rem;
+  box-shadow:0 0 12px rgba(0,0,0,.12);
+  position:relative;
 }
 
 #page::before{
-content:"";
-position:absolute;
-left:2rem;
-top:0;
-bottom:0;
-width:1px;
-background:#f44;
+  content:"";
+  position:absolute;
+  left:2rem;
+  top:0;
+  bottom:0;
+  width:1px;
+  background:#f44;
 }
 
-h1{
-text-align:center;
-margin:0 0 .3rem 0;
-font-size:1.1rem;
-}
-
-/* ===== TOP BAR ===== */
+h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
 
 #backupContainer{
-display:flex;
-flex-wrap:wrap;
-gap:.25rem;
-justify-content:flex-end;
-margin-bottom:.3rem;
+  display:flex;
+  flex-wrap:wrap;
+  gap:.25rem;
+  justify-content:flex-end;
+  margin-bottom:.3rem;
 }
 
-#backupContainer button{
-font-size:.75rem;
-padding:.2rem .35rem;
-cursor:pointer;
-border:none;
-background:#f0f0f0;
-border-radius:3px;
-}
-
-#importantFilter,
-#focusModeBtn{opacity:.4}
-
-#importantFilter.active,
-#focusModeBtn.active{opacity:1}
-
-#searchInput{
-margin-left:5px;
-font-size:.75rem;
-}
-
-/* ===== INPUT ===== */
+#backupContainer button{font-size:.75rem;padding:.2rem .35rem;cursor:pointer;border:none;background:#f0f0f0;border-radius:3px;}
+#importantFilter,#focusModeBtn{opacity:.4}
+#importantFilter.active,#focusModeBtn.active{opacity:1}
+#searchInput{margin-left:5px;font-size:.75rem;}
 
 #inputContainer{
-position:sticky;
-top:0;
-background:#fffdf5;
-padding:.15rem 0;
-border-bottom:1px solid #ccc;
-display:flex;
-flex-wrap:wrap;
-gap:.25rem;
-z-index:1;
+  position:sticky;
+  top:0;
+  background:#fffdf5;
+  padding:.15rem 0;
+  border-bottom:1px solid #ccc;
+  display:flex;
+  flex-wrap:wrap;
+  gap:.25rem;
+  z-index:1;
 }
 
-.reminder{
-width:100%;
-font-size:.75rem;
-color:#555;
-}
+.reminder{width:100%;font-size:.75rem;color:#555;}
 
 #newEntry{
-flex:1;
-padding:.3rem;
-font-size:.95rem;
-resize:none;
-border:1px solid #ccc;
-border-radius:3px;
-background:#fffdf5;
+  flex:1;
+  padding:.3rem;
+  font-size:.95rem;
+  resize:none;
+  border:1px solid #ccc;
+  border-radius:3px;
+  background:#fffdf5;
 }
 
-#toolbar{
-width:100%;
-display:flex;
-gap:.25rem;
-}
+#toolbar{width:100%;display:flex;gap:.25rem;}
+#toolbar button{font-size:.8rem;padding:.25rem .5rem;cursor:pointer;border:1px solid #ccc;border-radius:3px;background:#f5f5f0;}
 
-#toolbar button{
-font-size:.8rem;
-padding:.25rem .5rem;
-cursor:pointer;
-border:1px solid #ccc;
-border-radius:3px;
-background:#f5f5f0;
-}
-
-/* ===== ENTRIES ===== */
-
-#entries{
-max-height:60vh;
-overflow-y:auto;
-margin-top:.4rem;
-}
-
-/* grid layout fixes timestamp position */
+#entries{max-height:60vh;overflow-y:auto;margin-top:.4rem;}
 
 .entry{
-display:grid;
-grid-template-columns:1fr auto;
-grid-template-areas:
-"note actions"
-"timestamp timestamp";
-padding:.25rem .2rem .4rem .2rem;
-position:relative;
+  display:grid;
+  grid-template-columns:1fr auto;
+  grid-template-areas:"note actions" "timestamp timestamp";
+  align-items:start;
+  padding:.25rem .2rem .4rem .2rem;
+  position:relative;
 }
 
-.entry{
-display:grid;
-grid-template-columns:1fr auto;
-grid-template-areas:
-"note actions"
-"timestamp timestamp";
-align-items:start;
-padding:.25rem .2rem .4rem .2rem;
-position:relative;
-}
-
-.note{
-grid-area:note;
-margin-left:1.5rem;
-max-height:4.2rem;
-overflow:hidden;
-}
-
+.note{grid-area:note;margin-left:1.5rem;max-height:4.2rem;overflow:hidden;}
 .note.expanded{max-height:none;}
 
-.timestamp{
-grid-area:timestamp;
-margin-left:1.5rem;
-font-size:.75rem;
-color:#888;
-margin-top:.2rem;
-}
-
-.actions{
-grid-area:actions;
-display:flex;
-align-items:flex-start;
-justify-content:flex-end;
-}
-
-.actions button{
-margin-left:.15rem;
-font-size:.7rem;
-cursor:pointer;
-background:none;
-border:none;
-}
+.timestamp{grid-area:timestamp;margin-left:1.5rem;font-size:.75rem;color:#888;margin-top:.2rem;}
+.actions{grid-area:actions;display:flex;align-items:flex-start;justify-content:flex-end;}
+.actions button{margin-left:.15rem;font-size:.7rem;cursor:pointer;background:none;border:none;}
 
 .importance{opacity:.4}
 .importance.active{opacity:1}
 
-.expandBtn{
-font-size:.7rem;
-background:none;
-border:none;
-cursor:pointer;
-color:#0077cc;
-}
+.expandBtn{font-size:.7rem;background:none;border:none;cursor:pointer;color:#0077cc;}
 
-#importFile{display:none}
-
-/* ===== MOBILE ===== */
+#importFile{display:none;}
 
 @media(max-width:480px){
-
-.note{margin-left:1rem}
-.timestamp{margin-left:1rem;font-size:.7rem}
-
+  .note{margin-left:1rem}
+  .timestamp{margin-left:1rem;font-size:.7rem}
 }
-
-.entry { 
-  row-gap: 0.2rem; /* ensures consistent spacing between note and timestamp on mobile */
-}
-
+.entry { row-gap: 0.2rem; }
 </style>
 </head>
 
 <body>
-
 <div id="page">
-
 <h1>Private Journal</h1>
 
 <div id="backupContainer">
-
-<button id="importantFilter">⭐</button>
-<button id="focusModeBtn">🎯</button>
-
-<button id="exportBtn">Export</button>
-<button id="importBtn">Import</button>
-
-<input type="file" id="importFile" accept=".txt">
-
-<input type="text" id="searchInput" placeholder="Search...">
-
+  <button id="importantFilter">⭐</button>
+  <button id="focusModeBtn">🎯</button>
+  <button id="exportBtn">Export</button>
+  <button id="importBtn">Import</button>
+  <input type="file" id="importFile" accept=".txt">
+  <input type="text" id="searchInput" placeholder="Search...">
 </div>
 
 <div id="inputContainer">
-
-<div class="reminder">Press Enter for new line, tap + to save</div>
-
-<textarea id="newEntry" rows="2" placeholder="Write note..."></textarea>
-
-<div id="toolbar">
-<button id="addBtn">+</button>
-<button id="boldBtn">B</button>
-<button id="capsBtn">CAPS</button>
-<button id="timestampBtn">🕒</button>
-</div>
-
+  <div class="reminder">Press Enter for new line, tap + to save</div>
+  <textarea id="newEntry" rows="2" placeholder="Write note..."></textarea>
+  <div id="toolbar">
+    <button id="addBtn">+</button>
+    <button id="boldBtn">B</button>
+    <button id="capsBtn">CAPS</button>
+    <button id="timestampBtn">🕒</button>
+  </div>
 </div>
 
 <div id="entries"></div>
-
 </div>
 
 <script>
-
-let editIndex = null; // null = not editing, otherwise stores index of entry being edited
-
 /* ===== ELEMENTS ===== */
-
 const entriesDiv=document.getElementById('entries')
 const newEntryInput=document.getElementById('newEntry')
-
 const importantFilterBtn=document.getElementById('importantFilter')
 const focusModeBtn=document.getElementById('focusModeBtn')
-
 const addBtn=document.getElementById('addBtn')
 const boldBtn=document.getElementById('boldBtn')
 const capsBtn=document.getElementById('capsBtn')
 const timestampBtn=document.getElementById('timestampBtn')
-
 const searchInput=document.getElementById('searchInput')
 
 /* ===== DATA ===== */
-
 let entries=JSON.parse(localStorage.getItem('journalEntries')||'[]')
-
 let showImportantOnly=false
 let focusMode=false
 let boldOn=false
 let capsOn=false
 
 /* ===== TEXTAREA AUTO RESIZE ===== */
-
 function autoResize(){
-
-newEntryInput.style.height='auto'
-newEntryInput.style.height=newEntryInput.scrollHeight+'px'
-
+  newEntryInput.style.height='auto'
+  newEntryInput.style.height=newEntryInput.scrollHeight+'px'
 }
-
 newEntryInput.addEventListener('input',autoResize)
 
 /* ===== TIMESTAMP ===== */
-
 function getShortTimestamp(){
-
-const now=new Date()
-
-const d=now.getDate()
-const m=now.getMonth()+1
-
-const h=now.getHours()
-const min=String(now.getMinutes()).padStart(2,'0')
-
-return `${d}/${m} ${h}:${min}`
-
+  const now=new Date()
+  const d=now.getDate(), m=now.getMonth()+1, h=now.getHours(), min=String(now.getMinutes()).padStart(2,'0')
+  return `${d}/${m} ${h}:${min}`
 }
 
 /* ===== BUTTONS ===== */
-
 importantFilterBtn.onclick=()=>{
-
-showImportantOnly=!showImportantOnly
-importantFilterBtn.classList.toggle('active',showImportantOnly)
-
-renderEntries()
-
+  showImportantOnly=!showImportantOnly
+  importantFilterBtn.classList.toggle('active',showImportantOnly)
+  renderEntries()
 }
 
 focusModeBtn.onclick = () => {
     focusMode = !focusMode;
     focusModeBtn.classList.toggle('active', focusMode);
-
-    const entriesDiv = document.getElementById('entries');
-
-    if (focusMode) {
-        // Hide existing entries
-        entriesDiv.style.display = 'none';
-    } else {
-        // Show entries again
-        entriesDiv.style.display = 'block';
-    }
-
-    // Focus on input box
+    entriesDiv.style.display = focusMode ? 'none' : 'block';
     newEntryInput.focus();
 };
 boldBtn.onclick=()=>{
-
-boldOn=!boldOn
-
-boldBtn.style.opacity=boldOn?'1':'0.6'
-
-newEntryInput.style.fontWeight=boldOn?'700':'500'
-
+  boldOn=!boldOn
+  boldBtn.style.opacity=boldOn?'1':'0.6'
+  newEntryInput.style.fontWeight=boldOn?'700':'500'
 }
-
 capsBtn.onclick=()=>{
-
-capsOn=!capsOn
-
-capsBtn.style.opacity=capsOn?'1':'0.6'
-
-newEntryInput.style.textTransform=capsOn?'uppercase':'none'
-
+  capsOn=!capsOn
+  capsBtn.style.opacity=capsOn?'1':'0.6'
+  newEntryInput.style.textTransform=capsOn?'uppercase':'none'
 }
-
 timestampBtn.onclick=()=>{
-
-newEntryInput.value+=getShortTimestamp()
-
-autoResize()
-newEntryInput.focus()
-
+  newEntryInput.value+=getShortTimestamp()
+  autoResize()
+  newEntryInput.focus()
 }
 
 /* ===== ADD ENTRY ===== */
-
 addBtn.onclick=addEntry
-
 function addEntry() {
-    let text = newEntryInput.value.trim();
-    if (!text) return;
+  let text = newEntryInput.value.trim();
+  if (!text) return;
+  if (capsOn) text = text.toUpperCase()
+  if (boldOn) text = `**${text}**`
 
-    if (capsOn) text = text.toUpperCase();
-    if (boldOn) text = `**${text}**`;
+  entries.unshift({text, timestamp:getShortTimestamp(), important:false})
+  localStorage.setItem('journalEntries', JSON.stringify(entries))
 
-    if (editIndex !== null) {
-        // Editing an existing entry
-        entries[editIndex].text = text;
-        editIndex = null; // reset edit mode
-    } else {
-        // Adding a new entry
-        entries.unshift({
-            text: text,
-            timestamp: getShortTimestamp(),
-            important: false
-        });
-    }
+  newEntryInput.value = ''
+  newEntryInput.style.height='auto'
+  newEntryInput.style.fontWeight='500'
+  newEntryInput.style.textTransform='none'
+  boldOn = false; capsOn = false; boldBtn.style.opacity='0.6'; capsBtn.style.opacity='0.6'
 
-    localStorage.setItem('journalEntries', JSON.stringify(entries));
-
-    newEntryInput.value = '';
-    newEntryInput.style.height = 'auto';
-    newEntryInput.style.fontWeight = '500';
-    newEntryInput.style.textTransform = 'none';
-
-    boldOn = false;
-    capsOn = false;
-    boldBtn.style.opacity = '0.6';
-    capsBtn.style.opacity = '0.6';
-
-    renderEntries();
+  renderEntries()
 }
 
 /* ===== SEARCH ===== */
-
 searchInput.addEventListener('input',renderEntries)
 
 /* ===== RENDER ===== */
-
 function renderEntries(){
+  const query=searchInput.value.toLowerCase()
+  entriesDiv.innerHTML=''
 
-const query=searchInput.value.toLowerCase()
+  entries
+  .filter(e=>(!showImportantOnly||e.important)&&(!query || e.text.toLowerCase().includes(query)))
+  .forEach((entry,i)=>{
+    if(focusMode && !entry.important) return
 
-entriesDiv.innerHTML=''
+    const div=document.createElement('div')
+    div.className='entry'
 
-entries
-.filter(e=>
+    const note=document.createElement('span')
+    note.className='note'
 
-(!showImportantOnly||e.important) &&
-(!query || e.text.toLowerCase().includes(query))
+    // Click to edit
+    note.addEventListener('click', ()=>{
+      if(focusMode && !entry.important) return
+      let cleanText = entry.text
+      if(cleanText.startsWith("**") && cleanText.endsWith("**")) cleanText = cleanText.slice(2,-2)
+      newEntryInput.value = cleanText
+      autoResize()
+      newEntryInput.focus()
+    })
 
-)
-.forEach((entry,i)=>{
-
-if(focusMode && !entry.important)return
-
-const div=document.createElement('div')
-div.className='entry'
-
-const note=document.createElement('span')
-note.className='note'
-
-note.addEventListener('click', () => {
-    // Ignore click if entry is hidden in focus mode
-    if (focusMode && !entry.important) return;
-
-    // Remove bold markers if present
-    let cleanText = entry.text;
-    if (cleanText.startsWith("**") && cleanText.endsWith("**")) {
-        cleanText = cleanText.slice(2, -2);
+    function formatTextWithLineBreaks(text){
+      const escaped=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      return escaped.replace(/\n/g,'<br>')
     }
 
-    // Load into input for editing
-    newEntryInput.value = cleanText;
-    autoResize();
-    newEntryInput.focus();
+    note.innerHTML = entry.text.startsWith("**") && entry.text.endsWith("**") ?
+      "<strong>"+formatTextWithLineBreaks(entry.text.slice(2,-2))+"</strong>" :
+      formatTextWithLineBreaks(entry.text)
 
-    // Set edit index
-    editIndex = i;
-});
+    const ts=document.createElement('span')
+    ts.className='timestamp'
+    ts.textContent=entry.timestamp
 
-function formatTextWithLineBreaks(text) {
-    // Escape HTML to prevent XSS
-    const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    // Replace line breaks with <br>
-    return escaped.replace(/\n/g,'<br>')
+    const actions=document.createElement('div')
+    actions.className='actions'
+
+    // important
+    const imp=document.createElement('button')
+    imp.textContent='⭐'
+    imp.className='importance'+(entry.important?' active':'')
+    imp.onclick=()=>{
+      entry.important=!entry.important
+      localStorage.setItem('journalEntries',JSON.stringify(entries))
+      renderEntries()
+    }
+
+    // copy
+    const copy=document.createElement('button')
+    copy.textContent='📋'
+    copy.onclick=()=>navigator.clipboard.writeText(entry.text.replace(/\*\*/g,''))
+
+    // delete
+    const del=document.createElement('button')
+    del.textContent='🗑'
+    del.onclick=()=>{
+      entries.splice(i,1)
+      localStorage.setItem('journalEntries',JSON.stringify(entries))
+      renderEntries()
+    }
+
+    // expand
+    if(entry.text.length>140 || entry.text.includes("\n")){
+      const expand=document.createElement('button')
+      expand.className='expandBtn'
+      expand.textContent='▶'
+      expand.onclick=()=>{
+        note.classList.toggle('expanded')
+        expand.textContent=note.classList.contains('expanded')?'▼':'▶'
+      }
+      actions.appendChild(expand)
+    }
+
+    actions.append(imp,copy,del)
+    div.append(note,actions,ts)
+    entriesDiv.appendChild(div)
+  })
 }
 
-if(entry.text.startsWith("**") && entry.text.endsWith("**")){
-    note.innerHTML="<strong>"+formatTextWithLineBreaks(entry.text.slice(2,-2))+"</strong>"
-}else{
-    note.innerHTML = formatTextWithLineBreaks(entry.text)
-}
-
-const ts=document.createElement('span')
-ts.className='timestamp'
-ts.textContent=entry.timestamp
-
-const actions=document.createElement('div')
-actions.className='actions'
-
-/* important */
-
-const imp=document.createElement('button')
-imp.textContent='⭐'
-imp.className='importance'+(entry.important?' active':'')
-
-imp.onclick=()=>{
-
-entry.important=!entry.important
-
-localStorage.setItem('journalEntries',JSON.stringify(entries))
-
-renderEntries()
-
-}
-
-/* copy */
-
-const copy=document.createElement('button')
-copy.textContent='📋'
-
-copy.onclick=()=>{
-
-const clean=entry.text.replace(/\*\*/g,'')
-
-navigator.clipboard.writeText(clean)
-
-}
-
-/* delete */
-
-const del=document.createElement('button')
-del.textContent='🗑'
-
-del.onclick=()=>{
-
-entries.splice(i,1)
-
-localStorage.setItem('journalEntries',JSON.stringify(entries))
-
-renderEntries()
-
-}
-
-/* expand */
-
-if(entry.text.length>140 || entry.text.includes("\n")){
-
-const expand=document.createElement('button')
-
-expand.className='expandBtn'
-expand.textContent='▶'
-
-expand.onclick=()=>{
-
-note.classList.toggle('expanded')
-
-expand.textContent=note.classList.contains('expanded')?'▼':'▶'
-
-}
-
-actions.appendChild(expand)
-
-}
-
-actions.append(imp,copy,del)
-
-div.append(note,actions,ts)
-
-entriesDiv.appendChild(div)
-
-})
-
-}
-
-/* ===== EXPORT ===== */
-
+/* ===== EXPORT / IMPORT / SERVICE WORKER ===== */
 document.getElementById('exportBtn').onclick=()=>{
-
-const content=entries
-.map(e=>`[${e.timestamp}]\n${e.text}\n------------------------`)
-.join('\n')
-
-const blob=new Blob([content],{type:"text/plain"})
-
-const url=URL.createObjectURL(blob)
-
-const a=document.createElement('a')
-
-a.href=url
-a.download=`journal_backup_${new Date().toISOString().slice(0,10)}.txt`
-
-a.click()
-
-URL.revokeObjectURL(url)
-
+  const content=entries.map(e=>`[${e.timestamp}]\n${e.text}\n------------------------`).join('\n')
+  const blob=new Blob([content],{type:"text/plain"})
+  const a=document.createElement('a')
+  a.href=URL.createObjectURL(blob)
+  a.download=`journal_backup_${new Date().toISOString().slice(0,10)}.txt`
+  a.click()
+  URL.revokeObjectURL(a.href)
 }
-
-/* ===== IMPORT ===== */
 
 const importFile=document.getElementById('importFile')
-
 document.getElementById('importBtn').onclick=()=>importFile.click()
-
 importFile.addEventListener('change',(e)=>{
-
-const file=e.target.files[0]
-
-if(!file)return
-
-const reader=new FileReader()
-
-reader.onload=function(evt){
-
-try{
-
-const text=evt.target.result
-
-const parts=text.split('------------------------')
-.map(s=>s.trim())
-.filter(s=>s)
-
-const imported=parts.map(part=>{
-
-const lines=part.split('\n')
-
-const tsMatch=lines[0].match(/\[(.+)\]/)
-
-const timestamp=tsMatch?tsMatch[1]:getShortTimestamp()
-
-const noteText=lines.slice(1).join('\n').trim()
-
-return {timestamp:timestamp,text:noteText,important:false}
-
+  const file=e.target.files[0]
+  if(!file) return
+  const reader=new FileReader()
+  reader.onload=function(evt){
+    try{
+      const text=evt.target.result
+      const parts=text.split('------------------------').map(s=>s.trim()).filter(s=>s)
+      entries=parts.map(part=>{
+        const lines=part.split('\n')
+        const tsMatch=lines[0].match(/\[(.+)\]/)
+        return { timestamp: tsMatch?tsMatch[1]:getShortTimestamp(), text: lines.slice(1).join('\n').trim(), important:false }
+      })
+      localStorage.setItem('journalEntries',JSON.stringify(entries))
+      renderEntries()
+      alert("Journal imported successfully!")
+    }catch{alert("Import failed")}
+  }
+  reader.readAsText(file)
 })
 
-entries=imported
-
-localStorage.setItem('journalEntries',JSON.stringify(entries))
-
-renderEntries()
-
-alert("Journal imported successfully!")
-
-}
-catch{
-
-alert("Import failed")
-
-}
-
-}
-
-reader.readAsText(file)
-
-})
-
-/* ===== SERVICE WORKER ===== */
-
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js')
-}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js')
 
 /* ===== INIT ===== */
-
 renderEntries()
-
+newEntryInput.value=''; newEntryInput.style.height='auto'; newEntryInput.style.fontWeight='500'; newEntryInput.style.textTransform='none';
+boldOn=false; capsOn=false; boldBtn.style.opacity='0.6'; capsBtn.style.opacity='0.6';
 </script>
-
 </body>
 </html>
