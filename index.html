@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Private Journal</title>
 <link rel="manifest" href="manifest.json">
-
 <style>
 /* ===== GENERAL ===== */
 body{
@@ -19,6 +18,7 @@ body{
   justify-content:center;
   padding:.5rem 0;
 }
+
 #page{
   background:#fffdf5;
   width:95%;
@@ -27,6 +27,7 @@ body{
   box-shadow:0 0 12px rgba(0,0,0,.12);
   position:relative;
 }
+
 #page::before{
   content:"";
   position:absolute;
@@ -36,6 +37,7 @@ body{
   width:1px;
   background:#f44;
 }
+
 h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
 
 /* ===== TOP BAR ===== */
@@ -46,6 +48,7 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   justify-content:flex-end;
   margin-bottom:.3rem;
 }
+
 #backupContainer button{
   font-size:.75rem;
   padding:.2rem .35rem;
@@ -54,8 +57,8 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   background:#f0f0f0;
   border-radius:3px;
 }
-#importantFilter,#focusModeBtn{opacity:.4}
-#importantFilter.active,#focusModeBtn.active{opacity:1}
+#importantFilter,#focusModeBtn,#helpBtn,#notepadBtn{opacity:.4}
+#importantFilter.active,#focusModeBtn.active,#helpBtn.active,#notepadBtn.active{opacity:1}
 #searchInput{margin-left:5px;font-size:.75rem;}
 
 /* ===== INPUT ===== */
@@ -70,7 +73,9 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   gap:.25rem;
   z-index:1;
 }
+
 .reminder{width:100%;font-size:.75rem;color:#555;}
+
 #newEntry{
   flex:1;
   padding:.3rem;
@@ -80,6 +85,7 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   border-radius:3px;
   background:#fffdf5;
 }
+
 #toolbar{width:100%;display:flex;gap:.25rem;}
 #toolbar button{font-size:.8rem;padding:.25rem .5rem;cursor:pointer;border:1px solid #ccc;border-radius:3px;background:#f5f5f0;}
 
@@ -108,16 +114,56 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
 }
 .entry { row-gap: 0.2rem; }
 
-/* ===== HELP & NOTEPAD UI ===== */
-.editableBox{
-  width: 100%;
-  padding: .3rem;
-  font-size: .85rem;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background: #fefdf5;
-  resize: vertical;
-  margin-bottom: .3rem;
+/* ===== HELP PANEL ===== */
+#helpPanel{
+  position:absolute;
+  top:0;
+  right:-310px;
+  width:300px;
+  height:95%;
+  background:#fefdf5;
+  border-left:1px solid #ccc;
+  box-shadow:-4px 0 12px rgba(0,0,0,.12);
+  padding:.5rem;
+  display:flex;
+  flex-direction:column;
+  transition: right .25s;
+  z-index:10;
+}
+#helpPanel textarea{
+  flex:1;
+  width:100%;
+  resize:vertical;
+  padding:.3rem;
+  border:1px solid #ccc;
+  border-radius:3px;
+  font-size:.85rem;
+}
+
+/* ===== NOTEPAD PANEL ===== */
+#notepadPanel{
+  position:absolute;
+  top:0;
+  right:-310px;
+  width:300px;
+  height:95%;
+  background:#fefdf5;
+  border-left:1px solid #ccc;
+  box-shadow:-4px 0 12px rgba(0,0,0,.12);
+  padding:.5rem;
+  display:flex;
+  flex-direction:column;
+  transition: right .25s;
+  z-index:11;
+}
+#notepadPanel textarea{
+  flex:1;
+  width:100%;
+  resize:vertical;
+  padding:.3rem;
+  border:1px solid #ccc;
+  border-radius:3px;
+  font-size:.85rem;
 }
 #notepadControls{
   display:flex;
@@ -136,11 +182,9 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
 }
 </style>
 </head>
-
 <body>
 <div id="page">
 <h1>Private Journal</h1>
-
 <div id="backupContainer">
   <button id="importantFilter">⭐</button>
   <button id="focusModeBtn">🎯</button>
@@ -150,19 +194,6 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   <button id="importBtn">Import</button>
   <input type="file" id="importFile" accept=".txt">
   <input type="text" id="searchInput" placeholder="Search...">
-</div>
-
-<!-- HELP FILE -->
-<textarea id="helpContent" class="editableBox" rows="5" style="display:none;"></textarea>
-
-<!-- NOTEPAD -->
-<div id="notepadContainer" style="display:none;">
-  <div id="notepadControls">
-    <button id="prevPageBtn">◀</button>
-    <span id="pageIndicator">Page 1 of 1</span>
-    <button id="nextPageBtn">▶</button>
-  </div>
-  <textarea id="notepadText" class="editableBox" rows="5" placeholder="Write temporary notes..."></textarea>
 </div>
 
 <div id="inputContainer">
@@ -175,203 +206,180 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
     <button id="timestampBtn">🕒</button>
   </div>
 </div>
-
 <div id="entries"></div>
+</div>
+
+<!-- HELP PANEL -->
+<div id="helpPanel">
+  <textarea id="helpText"></textarea>
+</div>
+
+<!-- NOTEPAD PANEL -->
+<div id="notepadPanel">
+  <div id="notepadControls">
+    <button id="prevPageBtn">◀</button>
+    <span id="pageIndicator">Page 1 of 1</span>
+    <button id="nextPageBtn">▶</button>
+  </div>
+  <textarea id="notepadText" placeholder="Write temporary notes..."></textarea>
 </div>
 
 <script>
 /* ===== ELEMENTS ===== */
-const entriesDiv=document.getElementById('entries')
-const newEntryInput=document.getElementById('newEntry')
-const importantFilterBtn=document.getElementById('importantFilter')
-const focusModeBtn=document.getElementById('focusModeBtn')
-const addBtn=document.getElementById('addBtn')
-const boldBtn=document.getElementById('boldBtn')
-const capsBtn=document.getElementById('capsBtn')
-const timestampBtn=document.getElementById('timestampBtn')
-const searchInput=document.getElementById('searchInput')
+const entriesDiv=document.getElementById('entries');
+const newEntryInput=document.getElementById('newEntry');
+const importantFilterBtn=document.getElementById('importantFilter');
+const focusModeBtn=document.getElementById('focusModeBtn');
+const addBtn=document.getElementById('addBtn');
+const boldBtn=document.getElementById('boldBtn');
+const capsBtn=document.getElementById('capsBtn');
+const timestampBtn=document.getElementById('timestampBtn');
+const searchInput=document.getElementById('searchInput');
+const helpBtn=document.getElementById('helpBtn');
+const helpPanel=document.getElementById('helpPanel');
+const helpText=document.getElementById('helpText');
+const notepadBtn=document.getElementById('notepadBtn');
+const notepadPanel=document.getElementById('notepadPanel');
+const notepadText=document.getElementById('notepadText');
+const prevPageBtn=document.getElementById('prevPageBtn');
+const nextPageBtn=document.getElementById('nextPageBtn');
+const pageIndicator=document.getElementById('pageIndicator');
 
 /* ===== DATA ===== */
-let entries=JSON.parse(localStorage.getItem('journalEntries')||'[]')
-let showImportantOnly=false
-let focusMode=false
-let boldOn=false
-let capsOn=false
+let entries=JSON.parse(localStorage.getItem('journalEntries')||'[]');
+let showImportantOnly=false;
+let focusMode=false;
+let boldOn=false;
+let capsOn=false;
+let notepadPages=JSON.parse(localStorage.getItem('notepadPages')||'[]');
+let currentPage=notepadPages.length?notepadPages.length-1:0;
 
 /* ===== TEXTAREA AUTO RESIZE ===== */
-function autoResize(){ newEntryInput.style.height='auto'; newEntryInput.style.height=newEntryInput.scrollHeight+'px' }
-newEntryInput.addEventListener('input',autoResize)
+function autoResize(){ newEntryInput.style.height='auto'; newEntryInput.style.height=newEntryInput.scrollHeight+'px'; }
+newEntryInput.addEventListener('input',autoResize);
 
 /* ===== TIMESTAMP ===== */
-function getShortTimestamp(){
-  const now=new Date()
-  return `${now.getDate()}/${now.getMonth()+1} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
-}
+function getShortTimestamp(){ const now=new Date(); const d=now.getDate(), m=now.getMonth()+1, h=now.getHours(), min=String(now.getMinutes()).padStart(2,'0'); return `${d}/${m} ${h}:${min}`; }
 
 /* ===== BUTTONS ===== */
-importantFilterBtn.onclick=()=>{
-  showImportantOnly=!showImportantOnly
-  importantFilterBtn.classList.toggle('active',showImportantOnly)
-  renderEntries()
-}
-focusModeBtn.onclick = () => {
-    focusMode = !focusMode;
-    focusModeBtn.classList.toggle('active', focusMode);
-    entriesDiv.style.display = focusMode ? 'none' : 'block';
-    newEntryInput.focus();
-};
-boldBtn.onclick=()=>{
-  boldOn=!boldOn
-  boldBtn.style.opacity=boldOn?'1':'0.6'
-  newEntryInput.style.fontWeight=boldOn?'700':'500'
-}
-capsBtn.onclick=()=>{
-  capsOn=!capsOn
-  capsBtn.style.opacity=capsOn?'1':'0.6'
-  newEntryInput.style.textTransform=capsOn?'uppercase':'none'
-}
-timestampBtn.onclick=()=>{
-  newEntryInput.value+=getShortTimestamp()
-  autoResize()
-  newEntryInput.focus()
-}
+importantFilterBtn.onclick=()=>{ showImportantOnly=!showImportantOnly; importantFilterBtn.classList.toggle('active',showImportantOnly); renderEntries(); }
+focusModeBtn.onclick=()=>{ focusMode=!focusMode; focusModeBtn.classList.toggle('active',focusMode); entriesDiv.style.display=focusMode?'none':'block'; newEntryInput.focus(); }
+boldBtn.onclick=()=>{ boldOn=!boldOn; boldBtn.style.opacity=boldOn?'1':'0.6'; newEntryInput.style.fontWeight=boldOn?'700':'500'; }
+capsBtn.onclick=()=>{ capsOn=!capsOn; capsBtn.style.opacity=capsOn?'1':'0.6'; newEntryInput.style.textTransform=capsOn?'uppercase':'none'; }
+timestampBtn.onclick=()=>{ newEntryInput.value+=getShortTimestamp(); autoResize(); newEntryInput.focus(); }
 
 /* ===== ADD ENTRY ===== */
-addBtn.onclick=addEntry
-function addEntry() {
+addBtn.onclick=()=>{ 
   let text=newEntryInput.value.trim(); if(!text) return;
-  if(capsOn) text=text.toUpperCase()
-  if(boldOn) text=`**${text}**`
-  entries.unshift({text,timestamp:getShortTimestamp(),important:false})
-  localStorage.setItem('journalEntries',JSON.stringify(entries))
-  newEntryInput.value=''; newEntryInput.style.height='auto'; newEntryInput.style.fontWeight='500'; newEntryInput.style.textTransform='none'
-  boldOn=false; capsOn=false; boldBtn.style.opacity='0.6'; capsBtn.style.opacity='0.6'
-  renderEntries()
+  if(capsOn) text=text.toUpperCase();
+  if(boldOn) text=`**${text}**`;
+  entries.unshift({text,timestamp:getShortTimestamp(),important:false});
+  localStorage.setItem('journalEntries',JSON.stringify(entries));
+  newEntryInput.value=''; newEntryInput.style.height='auto'; newEntryInput.style.fontWeight='500'; newEntryInput.style.textTransform='none';
+  boldOn=false; capsOn=false; boldBtn.style.opacity='0.6'; capsBtn.style.opacity='0.6';
+  renderEntries();
 }
 
 /* ===== SEARCH ===== */
-searchInput.addEventListener('input',renderEntries)
+searchInput.addEventListener('input',renderEntries);
 
 /* ===== RENDER ===== */
 function renderEntries(){
-  const query=searchInput.value.toLowerCase()
-  entriesDiv.innerHTML=''
-  entries.filter(e=>(!showImportantOnly||e.important)&&(!query || e.text.toLowerCase().includes(query)))
+  const query=searchInput.value.toLowerCase();
+  entriesDiv.innerHTML='';
+  entries.filter(e=>(!showImportantOnly||e.important)&&(!query||e.text.toLowerCase().includes(query)))
   .forEach((entry,i)=>{
-    if(focusMode && !entry.important) return
-    const div=document.createElement('div')
-    div.className='entry'
-    const note=document.createElement('span')
-    note.className='note'
+    if(focusMode&&!entry.important) return;
+    const div=document.createElement('div'); div.className='entry';
+    const note=document.createElement('span'); note.className='note';
     note.addEventListener('click',()=>{
-      if(focusMode && !entry.important) return
-      let cleanText=entry.text
-      if(cleanText.startsWith("**") && cleanText.endsWith("**")) cleanText=cleanText.slice(2,-2)
-      newEntryInput.value=cleanText
-      autoResize()
-      newEntryInput.focus()
-    })
-    function formatTextWithLineBreaks(text){return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
-    note.innerHTML=entry.text.startsWith("**") && entry.text.endsWith("**") ? "<strong>"+formatTextWithLineBreaks(entry.text.slice(2,-2))+"</strong>" : formatTextWithLineBreaks(entry.text)
-    const ts=document.createElement('span')
-    ts.className='timestamp'; ts.textContent=entry.timestamp
-    const actions=document.createElement('div'); actions.className='actions'
-    const imp=document.createElement('button'); imp.textContent='⭐'; imp.className='importance'+(entry.important?' active':'')
-    imp.onclick=()=>{ entry.important=!entry.important; localStorage.setItem('journalEntries',JSON.stringify(entries)); renderEntries() }
-    const copy=document.createElement('button'); copy.textContent='📋'; copy.onclick=()=>navigator.clipboard.writeText(entry.text.replace(/\*\*/g,''))
-    const del=document.createElement('button'); del.textContent='🗑'; del.onclick=()=>{ entries.splice(i,1); localStorage.setItem('journalEntries',JSON.stringify(entries)); renderEntries() }
-    if(entry.text.length>140 || entry.text.includes("\n")){
-      const expand=document.createElement('button'); expand.className='expandBtn'; expand.textContent='▶'
-      expand.onclick=()=>{ note.classList.toggle('expanded'); expand.textContent=note.classList.contains('expanded')?'▼':'▶' }
-      actions.appendChild(expand)
-    }
-    actions.append(imp,copy,del)
-    div.append(note,actions,ts)
-    entriesDiv.appendChild(div)
-  })
+      if(focusMode&&!entry.important) return;
+      let clean=entry.text; if(clean.startsWith('**')&&clean.endsWith('**')) clean=clean.slice(2,-2);
+      newEntryInput.value=clean; autoResize(); newEntryInput.focus();
+    });
+    function fmt(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+    note.innerHTML=(entry.text.startsWith('**')&&entry.text.endsWith('**'))?`<strong>${fmt(entry.text.slice(2,-2))}</strong>`:fmt(entry.text);
+    const ts=document.createElement('span'); ts.className='timestamp'; ts.textContent=entry.timestamp;
+    const actions=document.createElement('div'); actions.className='actions';
+    const imp=document.createElement('button'); imp.textContent='⭐'; imp.className='importance'+(entry.important?' active':'');
+    imp.onclick=()=>{ entry.important=!entry.important; localStorage.setItem('journalEntries',JSON.stringify(entries)); renderEntries(); }
+    const copy=document.createElement('button'); copy.textContent='📋'; copy.onclick=()=>navigator.clipboard.writeText(entry.text.replace(/\*\*/g,''));
+    const del=document.createElement('button'); del.textContent='🗑'; del.onclick=()=>{ entries.splice(i,1); localStorage.setItem('journalEntries',JSON.stringify(entries)); renderEntries(); }
+    if(entry.text.length>140||entry.text.includes('\n')){ const expand=document.createElement('button'); expand.className='expandBtn'; expand.textContent='▶'; expand.onclick=()=>{ note.classList.toggle('expanded'); expand.textContent=note.classList.contains('expanded')?'▼':'▶'; } actions.appendChild(expand);}
+    actions.append(imp,copy,del); div.append(note,actions,ts); entriesDiv.appendChild(div);
+  });
 }
 
-/* ===== EXPORT / IMPORT / SERVICE WORKER ===== */
+/* ===== EXPORT / IMPORT ===== */
 document.getElementById('exportBtn').onclick=()=>{
-  const content=entries.map(e=>`[${e.timestamp}]\n${e.text}\n------------------------`).join('\n')
-  const blob=new Blob([content],{type:"text/plain"})
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`journal_backup_${new Date().toISOString().slice(0,10)}.txt`; a.click(); URL.revokeObjectURL(a.href)
+  const content=entries.map(e=>`[${e.timestamp}]\n${e.text}\n------------------------`).join('\n');
+  const blob=new Blob([content],{type:"text/plain"});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`journal_backup_${new Date().toISOString().slice(0,10)}.txt`; a.click(); URL.revokeObjectURL(a.href);
 }
-const importFile=document.getElementById('importFile')
-document.getElementById('importBtn').onclick=()=>importFile.click()
-importFile.addEventListener('change',(e)=>{
-  const file=e.target.files[0]; if(!file) return
-  const reader=new FileReader()
+const importFile=document.getElementById('importFile');
+document.getElementById('importBtn').onclick=()=>importFile.click();
+importFile.addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
   reader.onload=function(evt){
     try{
-      const text=evt.target.result
-      const parts=text.split('------------------------').map(s=>s.trim()).filter(s=>s)
+      const text=evt.target.result;
+      const parts=text.split('------------------------').map(s=>s.trim()).filter(s=>s);
       entries=parts.map(part=>{
-        const lines=part.split('\n'); const tsMatch=lines[0].match(/\[(.+)\]/)
+        const lines=part.split('\n');
+        const tsMatch=lines[0].match(/\[(.+)\]/);
         return { timestamp: tsMatch?tsMatch[1]:getShortTimestamp(), text: lines.slice(1).join('\n').trim(), important:false }
-      })
-      localStorage.setItem('journalEntries',JSON.stringify(entries))
-      renderEntries()
-      alert("Journal imported successfully!")
-    }catch{alert("Import failed")}
+      });
+      localStorage.setItem('journalEntries',JSON.stringify(entries));
+      renderEntries();
+      alert("Journal imported successfully!");
+    }catch{ alert("Import failed"); }
   }
-  reader.readAsText(file)
-})
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js')
-renderEntries()
-newEntryInput.value=''; newEntryInput.style.height='auto'; newEntryInput.style.fontWeight='500'; newEntryInput.style.textTransform='none'; boldOn=false; capsOn=false; boldBtn.style.opacity='0.6'; capsBtn.style.opacity='0.6';
+  reader.readAsText(file);
+});
 
-/* ===== HELP FILE ===== */
-const helpBtn=document.getElementById('helpBtn')
-const helpContent=document.getElementById('helpContent')
-helpContent.value = localStorage.getItem('helpText') || "Welcome! This is your editable help file."
+/* ===== SERVICE WORKER ===== */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+/* ===== INIT HELP PANEL ===== */
+helpText.value=localStorage.getItem('helpText')||"Welcome! This is your editable help file.";
 helpBtn.onclick=()=>{
-    helpContent.style.display = helpContent.style.display==='none'?'block':'none';
-    if(helpContent.style.display==='block') helpContent.focus();
+  const open=helpPanel.style.right==='0px';
+  helpPanel.style.right=open?'-310px':'0px';
+  if(!open) helpText.focus();
 }
-let helpSaveTimeout;
-helpContent.addEventListener('input',()=>{
-    clearTimeout(helpSaveTimeout)
-    helpSaveTimeout=setTimeout(()=>{ localStorage.setItem('helpText',helpContent.value) },500)
-})
+helpText.addEventListener('input',()=>{
+  localStorage.setItem('helpText',helpText.value);
+});
 
-/* ===== NOTEPAD ===== */
-const notepadBtn=document.getElementById('notepadBtn')
-const notepadContainer=document.getElementById('notepadContainer')
-const notepadText=document.getElementById('notepadText')
-const prevPageBtn=document.getElementById('prevPageBtn')
-const nextPageBtn=document.getElementById('nextPageBtn')
-const pageIndicator=document.getElementById('pageIndicator')
-
-let notepadPages=JSON.parse(localStorage.getItem('notepadPages')||'[]')
-let currentPage=notepadPages.length?notepadPages.length-1:0
-
+/* ===== INIT NOTEPAD PANEL ===== */
+function loadNotepadPage(index){
+  if(notepadPages[index]) notepadText.value=notepadPages[index].text;
+  else notepadText.value='';
+  pageIndicator.textContent=`Page ${index+1} of ${notepadPages.length||1}`;
+}
 notepadBtn.onclick=()=>{
-    notepadContainer.style.display=notepadContainer.style.display==='none'?'block':'none';
-    loadPage(currentPage); notepadText.focus();
-}
-function loadPage(index){
-    if(notepadPages[index]) notepadText.value=notepadPages[index].text
-    else notepadText.value=''
-    pageIndicator.textContent=`Page ${index+1} of ${notepadPages.length||1}`
-}
-let notepadSaveTimeout;
+  const open=notepadPanel.style.right==='0px';
+  notepadPanel.style.right=open?'-310px':'0px';
+  if(!open) loadNotepadPage(currentPage);
+  notepadText.focus();
+};
 notepadText.addEventListener('input',()=>{
-    clearTimeout(notepadSaveTimeout)
-    notepadSaveTimeout=setTimeout(()=>{
-        notepadPages[currentPage]={text:notepadText.value}
-        localStorage.setItem('notepadPages',JSON.stringify(notepadPages))
-    },300)
-})
+  notepadPages[currentPage]={ text:notepadText.value };
+  localStorage.setItem('notepadPages',JSON.stringify(notepadPages));
+});
 prevPageBtn.onclick=()=>{
-    if(currentPage>0) currentPage--
-    loadPage(currentPage)
-}
+  if(currentPage>0) currentPage--;
+  loadNotepadPage(currentPage);
+};
 nextPageBtn.onclick=()=>{
-    currentPage++
-    if(!notepadPages[currentPage]) notepadPages.push({text:''})
-    loadPage(currentPage)
-}
+  currentPage++;
+  if(!notepadPages[currentPage]) notepadPages.push({text:''});
+  loadNotepadPage(currentPage);
+};
+
+/* ===== INITIAL RENDER ===== */
+renderEntries();
 </script>
 </body>
 </html>
