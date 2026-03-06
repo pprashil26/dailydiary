@@ -121,6 +121,35 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
     resize: vertical;
     margin-bottom: .3rem;
 }
+
+#notepadContainer {
+    margin-bottom: .3rem;
+    width: 100%;
+}
+#notepadText {
+    width: 100%;
+    padding: .3rem;
+    font-size: .85rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #fefdf5;
+    resize: vertical;
+}
+#notepadControls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .2rem;
+    font-size: .75rem;
+}
+#notepadControls button {
+    cursor: pointer;
+    font-size: .85rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #f5f5f0;
+    padding: .2rem .4rem;
+}
 </style>
 </head>
 
@@ -132,10 +161,20 @@ h1{text-align:center;margin:0 0 .3rem 0;font-size:1.1rem;}
   <button id="importantFilter">⭐</button>
   <button id="focusModeBtn">🎯</button>
   <button id="helpBtn">💡</button>
+  <button id="notepadBtn">📝</button>
   <button id="exportBtn">Export</button>
   <button id="importBtn">Import</button>
   <input type="file" id="importFile" accept=".txt">
   <input type="text" id="searchInput" placeholder="Search...">
+</div>
+
+<div id="notepadContainer" style="display:none;">
+    <div id="notepadControls">
+        <button id="prevPageBtn">◀</button>
+        <span id="pageIndicator">Page 1 of 1</span>
+        <button id="nextPageBtn">▶</button>
+    </div>
+    <textarea id="notepadText" rows="5" placeholder="Write temporary notes..."></textarea>
 </div>
 
 <div id="inputContainer">
@@ -383,6 +422,54 @@ helpContent.addEventListener('input', () => {
         localStorage.setItem('helpText', helpContent.value);
     }, 500);
 });
+
+const notepadBtn = document.getElementById('notepadBtn');
+const notepadContainer = document.getElementById('notepadContainer');
+const notepadText = document.getElementById('notepadText');
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+const pageIndicator = document.getElementById('pageIndicator');
+
+let notepadPages = JSON.parse(localStorage.getItem('notepadPages') || '[]');
+let currentPage = notepadPages.length ? notepadPages.length - 1 : 0;
+
+// Toggle notepad display
+notepadBtn.onclick = () => {
+    notepadContainer.style.display = notepadContainer.style.display === 'none' ? 'block' : 'none';
+    loadPage(currentPage);
+    notepadText.focus();
+};
+
+// Load a page
+function loadPage(index) {
+    if (notepadPages[index]) {
+        notepadText.value = notepadPages[index].text;
+    } else {
+        notepadText.value = '';
+    }
+    pageIndicator.textContent = `Page ${index + 1} of ${notepadPages.length || 1}`;
+}
+
+// Save current page on input (debounced)
+let saveTimeout;
+notepadText.addEventListener('input', () => {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        notepadPages[currentPage] = { text: notepadText.value };
+        localStorage.setItem('notepadPages', JSON.stringify(notepadPages));
+    }, 300);
+});
+
+// Navigate pages
+prevPageBtn.onclick = () => {
+    if (currentPage > 0) currentPage--;
+    loadPage(currentPage);
+};
+nextPageBtn.onclick = () => {
+    currentPage++;
+    if (!notepadPages[currentPage]) notepadPages.push({ text: '' }); // new blank page
+    loadPage(currentPage);
+};
 </script>
 </body>
 </html>
