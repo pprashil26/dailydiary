@@ -255,6 +255,8 @@ color:#0077cc;
 
 <script>
 
+let editIndex = null; // null = not editing, otherwise stores index of entry being edited
+
 /* ===== ELEMENTS ===== */
 
 const entriesDiv=document.getElementById('entries')
@@ -367,39 +369,39 @@ newEntryInput.focus()
 
 addBtn.onclick=addEntry
 
-function addEntry(){
+function addEntry() {
+    let text = newEntryInput.value.trim();
+    if (!text) return;
 
-let text=newEntryInput.value.trim()
+    if (capsOn) text = text.toUpperCase();
+    if (boldOn) text = `**${text}**`;
 
-if(!text)return
+    if (editIndex !== null) {
+        // Editing an existing entry
+        entries[editIndex].text = text;
+        editIndex = null; // reset edit mode
+    } else {
+        // Adding a new entry
+        entries.unshift({
+            text: text,
+            timestamp: getShortTimestamp(),
+            important: false
+        });
+    }
 
-if(capsOn)text=text.toUpperCase()
+    localStorage.setItem('journalEntries', JSON.stringify(entries));
 
-if(boldOn)text=`**${text}**`
+    newEntryInput.value = '';
+    newEntryInput.style.height = 'auto';
+    newEntryInput.style.fontWeight = '500';
+    newEntryInput.style.textTransform = 'none';
 
-entries.unshift({
+    boldOn = false;
+    capsOn = false;
+    boldBtn.style.opacity = '0.6';
+    capsBtn.style.opacity = '0.6';
 
-text:text,
-timestamp:getShortTimestamp(),
-important:false
-
-})
-
-localStorage.setItem('journalEntries',JSON.stringify(entries))
-
-newEntryInput.value=''
-newEntryInput.style.height='auto'
-newEntryInput.style.fontWeight='500'
-newEntryInput.style.textTransform='none'
-
-boldOn=false
-capsOn=false
-
-boldBtn.style.opacity='0.6'
-capsBtn.style.opacity='0.6'
-
-renderEntries()
-
+    renderEntries();
 }
 
 /* ===== SEARCH ===== */
@@ -430,6 +432,25 @@ div.className='entry'
 
 const note=document.createElement('span')
 note.className='note'
+
+note.addEventListener('click', () => {
+    // Ignore click if entry is hidden in focus mode
+    if (focusMode && !entry.important) return;
+
+    // Remove bold markers if present
+    let cleanText = entry.text;
+    if (cleanText.startsWith("**") && cleanText.endsWith("**")) {
+        cleanText = cleanText.slice(2, -2);
+    }
+
+    // Load into input for editing
+    newEntryInput.value = cleanText;
+    autoResize();
+    newEntryInput.focus();
+
+    // Set edit index
+    editIndex = i;
+});
 
 function formatTextWithLineBreaks(text) {
     // Escape HTML to prevent XSS
